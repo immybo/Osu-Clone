@@ -11,4 +11,11 @@ public class GameMap {
 	public GameMap(String toString){
 
 	}
+
+	/**
+	 * Returns the name of the map.
+	 */
+	public String getName(){
+		return "test";
+	}
 }
