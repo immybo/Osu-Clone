@@ -27,6 +27,15 @@ public class GameMenu {
 
 	private static boolean OPTION_WINDOW_RESIZABLE;
 
+	public static int GAME_WINDOW_DEFAULT_HEIGHT;
+	public static int GAME_WINDOW_DEFAULT_WIDTH;
+	public static int GAME_WINDOW_INITIAL_X;
+	public static int GAME_WINDOW_INITIAL_Y;
+	public static boolean GAME_WINDOW_RESIZABLE;
+
+	public static int GAME_TICK_TIME = 20;
+	public static int GAME_CIRCLE_SIZE = 100;
+
 	private static String MAP_FILE = "maps.txt";
 	private static String OPTION_FILE = "options.txt";
 
@@ -46,9 +55,9 @@ public class GameMenu {
 	private JCheckBox hiddenCheckbox;
 
 	private java.util.List<JButton> mapButton = new ArrayList<JButton>();
+	private Map<JButton, String> mapList = new HashMap<JButton, String>();
 
-	// A list of all maps available
-	private java.util.List<GameMap> maps;
+	private Game currentGame = null;
 
 	/**
 	 * Begins the game by instantiating GameMenu
@@ -77,7 +86,7 @@ public class GameMenu {
 		menuOuterFrame.setLocation(MAIN_WINDOW_INITIAL_X, MAIN_WINDOW_INITIAL_Y);
 		menuOuterFrame.setResizable(MAIN_WINDOW_RESIZABLE);
 		menuOuterFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		menuOuterFrame.setTitle("Osu Clone Menu");
+		menuOuterFrame.setTitle("MyOsu! Menu");
 		// Using a GridLayout for the outer frame
 		menuOuterFrame.setLayout(new GridLayout());
 
@@ -98,9 +107,11 @@ public class GameMenu {
 		leftPanel.add(hiddenCheckbox);
 
 		// And fill the map buttons from getMaps
-		maps = getMaps(MAP_FILE);
-		for(GameMap map : maps){
-			JButton btn = new JButton(map.getName());
+		java.util.List<String> mapNames = getMaps(MAP_FILE);
+		for(String name : mapNames){
+			GameMap currentMap = getMap(name);
+			JButton btn = new JButton(currentMap.getName());
+			mapList.put(btn, currentMap.getName());
 			rightPanel.add(btn);
 			mapButton.add(btn);
 		}
@@ -144,6 +155,12 @@ public class GameMenu {
 
 		if(source.equals(optionButton)){
 			initialiseOptionFrame();
+		}
+
+		if(mapButton.contains(source)){
+			if(currentGame != null) currentGame.terminate();
+			GameMap newGameMap = getMap(mapList.get(source));
+			currentGame = new Game(newGameMap);
 		}
 	}
 
@@ -205,6 +222,12 @@ public class GameMenu {
 		OPTION_WINDOW_INITIAL_X = options.get("OPTION_WINDOW_INITIAL_X");
 		OPTION_WINDOW_INITIAL_Y = options.get("OPTION_WINDOW_INITIAL_Y");
 		OPTION_WINDOW_RESIZABLE = options.get("OPTION_WINDOW_RESIZABLE")==1 ? true : false;
+
+		GAME_WINDOW_DEFAULT_WIDTH = options.get("GAME_WINDOW_DEFAULT_WIDTH");
+		GAME_WINDOW_DEFAULT_HEIGHT = options.get("GAME_WINDOW_DEFAULT_HEIGHT");
+		GAME_WINDOW_INITIAL_X = options.get("GAME_WINDOW_INITIAL_X");
+		GAME_WINDOW_INITIAL_Y = options.get("GAME_WINDOW_INITIAL_Y");
+		GAME_WINDOW_RESIZABLE = options.get("GAME_WINDOW_RESIZABLE")==1 ? true : false;
 	}
 
 	/**
@@ -212,10 +235,8 @@ public class GameMenu {
 	 * @param filename The file to read from. Throws an exception if it can't read from this file.
 	 * @return A List of maps found from the file. Gives an empty List if it couldn't read from the file.
 	 */
-	private java.util.List<GameMap> getMaps(String filename){
-		// A list of maps to return
-		ArrayList<GameMap> returnMaps = new ArrayList<GameMap>();
-		// A list of map filenames to scan in
+	private java.util.List<String> getMaps(String filename){
+		// A list of map filenames
 		ArrayList<String> mapNames = new ArrayList<String>();
 		// Attempt to create a scanner to find map names and add them to the list of map names
 		try{
@@ -231,20 +252,21 @@ public class GameMenu {
 		catch(IOException e){
 			System.err.println("Could not read from map names file ("+filename+"). Details: " + e);
 		}
+		return mapNames;
+	}
 
-		// Scan through all of these files and make a new map with the scanner, then add it to the List to return
-		for(String fname : mapNames){
-			try{
-				Scanner s = new Scanner(new File("maps/" + fname));
-				GameMap newMap = new GameMap(s);
-				returnMaps.add(newMap);
-			}
-			catch(IOException e){
-				System.err.println("Could not read from map file '"+fname+"'. Is this file not present? Details: " + e);
-			}
+	private GameMap getMap(String filename){
+		// Scan through the file and attempt to make a map from it, then return it.
+		// Return null after an IOException
+		try{
+			Scanner s = new Scanner(new File("maps/" + filename));
+			GameMap newMap = new GameMap(s);
+			return newMap;
 		}
-
-		return returnMaps;
+		catch(IOException e){
+			System.err.println("Could not read from map file '"+filename+"'. Is this file not present? Details: " + e);
+		}
+		return null;
 	}
 
 	/**
@@ -253,6 +275,7 @@ public class GameMenu {
 	 * @return A map of options found from the file (String -> Integer). 0/1 is used for boolean options.
 	 */
 	private Map<String, Integer> getOptions(String filename){
+
 		// The map to return; specifically a HashMap
 		Map<String, Integer> options = new HashMap<String, Integer>();
 

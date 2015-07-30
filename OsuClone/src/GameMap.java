@@ -19,7 +19,7 @@ public class GameMap {
 	// A queue of the types of these elements (circle, slider, spinner),(1,2,3)
 	private Queue<Integer> elementType;
 	// Queues of the time which these elements occur and their x/y positions
-	private Queue<Double> elementTime;
+	private Queue<Integer> elementTime;
 	private Queue<Integer> elementX;
 	private Queue<Integer> elementY;
 
@@ -35,14 +35,14 @@ public class GameMap {
 
 		// Then, initialise the queues
 		elementType = new LinkedList<Integer>();
-		elementTime = new LinkedList<Double>();
+		elementTime = new LinkedList<Integer>();
 		elementX = new LinkedList<Integer>();
 		elementY = new LinkedList<Integer>();
 
 		// And scroll through the scanner, finding all the values
 		for(int i = 0; i < elementCount; i++){
 			if(s.hasNextInt()) elementType.add(s.nextInt());
-			if(s.hasNextDouble()) elementTime.add(s.nextDouble());
+			if(s.hasNextInt()) elementTime.add(s.nextInt());
 			if(s.hasNextInt()) elementX.add(s.nextInt());
 			if(s.hasNextInt()) elementY.add(s.nextInt());
 		}
@@ -60,15 +60,23 @@ public class GameMap {
 
 	/**
 	 * Returns and deletes the next elements of the map
-	 * @return A list of {element type, element time, element x, element y}, all doubles, where element type is 1, 2 or 3 for circle, slider or spinner
+	 * @return An array of {element type, element time, element x, element y}, where element type is 1, 2 or 3 for circle, slider or spinner. Note that element time is in ms.
 	 */
-	public List<Double> next(){
-		List<Double> returnList = new ArrayList<Double>();
-		returnList.add((double)elementType.poll());
-		returnList.add(elementTime.poll());
-		returnList.add((double)elementX.poll());
-		returnList.add((double)elementY.poll());
+	public int[] next(){
+		int[] returnValues = new int[4];
+		returnValues[0] = elementType.poll();
+		returnValues[1] = elementTime.poll();
+		returnValues[2] = elementX.poll();
+		returnValues[3] = elementY.poll();
 
-		return returnList;
+		return returnValues;
+	}
+
+	/**
+	 * Returns but does NOT DELETE the time of the next element in the map
+	 */
+	public int nextTime(){
+		if(elementTime.isEmpty()){ return -1; }
+		return elementTime.peek();
 	}
 }
