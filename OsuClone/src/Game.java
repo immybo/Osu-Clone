@@ -137,6 +137,7 @@ public class Game implements ActionListener{
 			double radius = Math.sqrt(Math.pow(x-element[2],2) + Math.pow(y-element[3],2));
 			if(radius < circleSize/2){
 				elementsToRemove.add(element);
+				break;
 			}
 		}
 
@@ -163,7 +164,7 @@ public class Game implements ActionListener{
 
 		score += scores[classification];
 		health += healthChange[classification];
-		System.out.println(score);
+		System.out.println(scores[classification]);
 
 		// And finally, remove the circle from currentelements
 		currentElements.remove(element);
