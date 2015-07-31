@@ -4,9 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -39,9 +37,9 @@ public class Game {
 	private List<Element> currentElements = new ArrayList<Element>();
 
 	// The time between an element appearing and it needing to be clicked
-	private int approachTime = 500;
+	private int approachTime;
 	// The size, in pixels, of all elements
-	private int circleSize = 100;
+	private int circleSize;
 	// The current time in the map
 	private int currentMapTime;
 	// The system time at which the map started
@@ -73,8 +71,9 @@ public class Game {
 		currentMapTime = 0;
 		mapStartTime = System.currentTimeMillis();
 
-		timeOffsets = new int[3];
-		timeOffsets[0] = 1000; timeOffsets[1] = 2500; timeOffsets[2] = 5000;
+		timeOffsets = map.getOD();
+		approachTime = map.getAR();
+		circleSize = map.getCS();
 
 		createWindow();
 
@@ -105,9 +104,8 @@ public class Game {
 
 		// And the panel to draw on inside it
 		mainPanel = new GameDraw();
-		mainPanel.setPreferredSize(new Dimension(1000,930));
 		// Initialise its attributes
-		mainPanel.init(circleSize, approachTime);
+		mainPanel.init(circleSize, approachTime, timeOffsets[2]);
 
 		mainPanel.setFocusable(true);
 		mainPanel.requestFocus();
@@ -117,7 +115,7 @@ public class Game {
 		guiPanel.setPreferredSize(new Dimension(1000,70));
 
 		mainFrame.add(guiPanel, BorderLayout.NORTH);
-		mainFrame.add(mainPanel, BorderLayout.SOUTH);
+		mainFrame.add(mainPanel, BorderLayout.CENTER);
 
 		mainFrame.setVisible(true);
 
@@ -131,6 +129,7 @@ public class Game {
 				mouseY = e.getY();
 			}
 		}
+		mainPanel.addMouseListener(new InnerMouseListener());
 		mainPanel.addMouseMotionListener(new InnerMouseListener());
 
 		// Set the key listener on the screen
@@ -214,7 +213,7 @@ public class Game {
 		// Figure out the time offset from when the element was supposed to be clicked
 		int supposedTime = element.getTime();
 		int timeOffset = Math.abs(time - supposedTime);
-
+		System.out.println(timeOffset);
 		int classification = 0;
 		if(wasClicked){
 			if(timeOffset > timeOffsets[0]) classification = 1;

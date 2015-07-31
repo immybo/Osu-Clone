@@ -16,7 +16,7 @@ public class GameDraw extends JPanel{
 	// The initial size of all approach circles
 	private int approachSize;
 	// The accuracy (in ms) required before the circle disappears
-	private int accuracy = 1000;
+	private int accuracy;
 
 	// The list of circles to be drawn
 	private java.util.List<Circle> circles = new ArrayList<Circle>();
@@ -34,9 +34,10 @@ public class GameDraw extends JPanel{
 	/**
 	 * Initialises circle size and approach rate
 	 */
-	public void init(int circleSize, int approachRate){
+	public void init(int circleSize, int approachRate, int overallDifficulty){
 		this.circleSize = circleSize;
 		this.approachRate = approachRate;
+		this.accuracy = overallDifficulty;
 		approachSize = this.circleSize*2;
 		previousTime = System.currentTimeMillis();
 	}
@@ -68,7 +69,7 @@ public class GameDraw extends JPanel{
 
 			// Check if the circle is supposed to disappear
 			// (Which we can tell from the approach circle size compared to the normal circle size, the accuracy required, and the approach rate
-			if(next.approachCircleSize < circleSize - accuracy/approachRate*circleSize){
+			if(next.approachCircleSize < circleSize - (approachSize-circleSize)*(accuracy/approachRate)){
 				// If it is supposed to disappear, add it to the disposal queue
 				disposalElements.offer(next);
 				continue;
@@ -123,9 +124,9 @@ public class GameDraw extends JPanel{
 	 */
 	private void dequeueCircle(Circle circle){
 		// Iterate through the queue and remove it if it's the same circle
-		Iterator iter = circles.iterator();
+		Iterator<Circle> iter = circles.iterator();
 		while(iter.hasNext()){
-			Circle c = (Circle)iter.next();
+			Circle c = iter.next();
 			if(c.equals(circle)){
 				iter.remove();
 			}
