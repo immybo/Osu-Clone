@@ -1,3 +1,5 @@
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -23,6 +25,7 @@ public class Game implements ActionListener{
 	// Swing components
 	private JFrame mainFrame;
 	private GameDraw mainPanel;
+	private GameGUI guiPanel;
 
 	// The game timer
 	private Timer timer;
@@ -51,7 +54,7 @@ public class Game implements ActionListener{
 	// The time offsets which give the player scores of: 100, 50 and MISS, respectively
 	private int[] timeOffsets;
 	private int[] scores = { 300, 100, 50, 0 };
-	private int[] healthChange = { 10, -10, -20, -50 };
+	private int[] healthChange = { 10, -5, -10, -20 };
 
 	/**
 	 * Constructor; instantiates Game.
@@ -87,9 +90,16 @@ public class Game implements ActionListener{
 
 		// And the panel to draw on inside it
 		mainPanel = new GameDraw();
+		mainPanel.setPreferredSize(new Dimension(1000,930));
 		// Initialise its attributes
 		mainPanel.init(circleSize, approachTime);
-		mainFrame.add(mainPanel);
+
+		// Add the GUI panel to draw on
+		guiPanel = new GameGUI();
+		guiPanel.setPreferredSize(new Dimension(1000,70));
+
+		mainFrame.add(guiPanel, BorderLayout.NORTH);
+		mainFrame.add(mainPanel, BorderLayout.SOUTH);
 
 		mainFrame.setVisible(true);
 
@@ -172,7 +182,9 @@ public class Game implements ActionListener{
 
 		score += scores[classification];
 		health += healthChange[classification];
-		System.out.println(scores[classification]);
+
+		if(health > 100) health = 100;
+		if(health < 0) health = 0;
 
 		// And finally, remove the element from currentelements
 		currentElements.remove(element);
@@ -192,8 +204,20 @@ public class Game implements ActionListener{
 		// Draw all circles left in the queue
 		drawQueue();
 
+		// Update the gui attributes
+		setGuiAttributes();
+
 		// Render
 		mainPanel.repaint();
+		guiPanel.repaint();
+	}
+
+	/**
+	 * Updates the score and health for the gui
+	 */
+	private void setGuiAttributes(){
+		guiPanel.setScore(score);
+		guiPanel.setHealth(health);
 	}
 
 	/**
