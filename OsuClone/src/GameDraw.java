@@ -1,4 +1,5 @@
 import javax.swing.*;
+
 import java.awt.*;
 import java.util.*;
 
@@ -14,12 +15,14 @@ public class GameDraw extends JPanel{
 	private int circleSize;
 	// The initial size of all approach circles
 	private int approachSize;
+	// The accuracy (in ms) required before the circle disappears
+	private int accuracy = 1000;
 
 	// The list of circles to be drawn
-	private java.util.List<int[]> circles = new ArrayList<int[]>();
+	private java.util.List<Circle> circles = new ArrayList<Circle>();
 
-	// The list of approach circles to be drawn
-	private java.util.List<double[]> approachCircles = new ArrayList<double[]>();
+	// The queue of elements that should be disposed of because they have timed out
+	private Queue<Element> disposalElements = new LinkedList<Element>();
 
 	// The colors to draw the circles in
 	Color borderColor = Color.BLACK;
@@ -45,76 +48,103 @@ public class GameDraw extends JPanel{
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0,0,this.getWidth(),this.getHeight());
 
-		for(int[] next : circles){
-			g2d.setColor(fillColor);
-			g2d.fillOval(next[0]-circleSize/2, next[1]-circleSize/2, circleSize, circleSize);
-			g2d.setColor(borderColor);
-			g2d.drawOval(next[0]-circleSize/2, next[1]-circleSize/2, circleSize, circleSize);
-		}
+		// Draw every circle and its approach circle
 
 		// Figure out how much each approach circle needs to have its size reduced by
 		long currentTime = System.currentTimeMillis();
 		long dT = currentTime - previousTime;
-
 		// Size reduction amount
 		double circleLoss = (double)(dT * (approachSize-circleSize))/approachRate;
 
-		for(double[] next : approachCircles){
-			next[3] -= circleLoss;
+		for(Circle next : circles){
+			// Draw every circle
+			g2d.setColor(fillColor);
+			g2d.fillOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
+			g2d.setColor(borderColor);
+			g2d.drawOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
 
+			// Decrease the size of every approach circle
+			next.approachCircleSize -= circleLoss;
+
+			// Check if the circle is supposed to disappear
+			// (Which we can tell from the approach circle size compared to the normal circle size, the accuracy required, and the approach rate
+			if(next.approachCircleSize < circleSize - accuracy/approachRate*circleSize){
+				// If it is supposed to disappear, add it to the disposal queue
+				disposalElements.offer(next);
+				continue;
+			}
+
+			// Draw the approach circle if not
 			g2d.setColor(approachColor);
-			int newX = (int)(next[0] - next[3]/2);
-			int newY = (int)(next[1] - next[3]/2);
-			g2d.drawOval(newX, newY, (int)next[3], (int)next[3]);
+			int approachX = next.getX()-circleSize/2-(next.approachCircleSize-circleSize)/2;
+			int approachY = next.getY()-circleSize/2-(next.approachCircleSize-circleSize)/2;
+			g2d.drawOval(approachX, approachY, next.approachCircleSize, next.approachCircleSize);
 		}
 
 		previousTime = currentTime;
 	}
 
 	/**
-	 * Queues a circle to be drawn and leaves it on the screen until dequeue is called on it.
-	 * @param xPos The x position of the center of the circle
-	 * @param yPos The y position of the center of the circle
-	 * @param id The unique ID of the circle, to know which one to remove
+	 * Adds an element to the queue of elements to be repeatedly drawn.
+	 * See also: dequeueElement
+	 * @param element The element to be added.
 	 */
-	public void queueCircle(int xPos, int yPos, int id){
-		int[] newCircle = { xPos, yPos, id };
-		circles.add(newCircle);
-		// Add the corresponding approach circle
-		queueApproachCircle(xPos, yPos, id);
+	public void queueElement(Element element){
+		switch(element.getElementType()){
+			case 1:
+				queueCircle((Circle)element);
+				break;
+		}
+	}
+	/**
+	 * Adds a circle to the queue of circles to be repeatedly drawn.
+	 */
+	private void queueCircle(Circle circle){
+		// Queue the circle
+		circles.add(circle);
+		// Set the initial approach circle size
+		circle.approachCircleSize = approachSize;
 	}
 
 	/**
-	 * Removes a circle from the screen along with its corresponding approach circle
+	 * Removes an element from the queue of elements to be repeatedly drawn.
+	 * Also removes any corresponding components, e.g. approach circles.
+	 * @param element The element to be removed.
 	 */
-	public void dequeueCircle(int xPos, int yPos, int id){
+	public void dequeueElement(Element element){
+		switch(element.getElementType()){
+			case 1:
+				dequeueCircle((Circle)element);
+				break;
+		}
+	}
+	/**
+	 * Removes a circle from the screen
+	 */
+	private void dequeueCircle(Circle circle){
+		// Iterate through the queue and remove it if it's the same circle
 		Iterator iter = circles.iterator();
 		while(iter.hasNext()){
-			int[] next = (int[])iter.next();
-			if(next[2] == id){
-				iter.remove();
-			}
-		}
-
-		iter = approachCircles.iterator();
-		while(iter.hasNext()){
-			double[] next = (double[])iter.next();
-			if(next[2] == id){
+			Circle c = (Circle)iter.next();
+			if(c.equals(circle)){
 				iter.remove();
 			}
 		}
 	}
 
 	/**
-	 * Queues an approach circle to be drawn with the given approach rate,
-	 * which continues to become smaller until it reaches a regular circle size
-	 * (then disappears)
-	 * @param xPos The x position of the center of the approach circle
-	 * @param yPos The y position of the center of the approach circle
-	 * @param id The unique ID of the circle, to know which one to remove
+	 * Gets the queue of elements that should be
+	 * removed, as they have timed out.
+	 * Also clears this queue.
+	 * @return The queue of elements
 	 */
-	private void queueApproachCircle(int xPos, int yPos, int id){
-		double[] newApproach = { xPos, yPos, id, approachSize };
-		approachCircles.add(newApproach);
+	public Queue<Element> getDisposalQueue(){
+		// The queue to return
+		Queue<Element> returnQueue = new LinkedList<Element>();
+		// Clone the disposal elements queue, emptying it as well
+		while(!disposalElements.isEmpty()){
+			returnQueue.add(disposalElements.poll());
+		}
+		return returnQueue;
 	}
 }
