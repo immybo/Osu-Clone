@@ -17,6 +17,7 @@ public class GameGUI extends JPanel{
 	@Override
 	public void paintComponent(Graphics g){
 		Graphics2D g2d = (Graphics2D)g;
+
 		// Clear current graphics
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0,0,this.getWidth(),this.getHeight());

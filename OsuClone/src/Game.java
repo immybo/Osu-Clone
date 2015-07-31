@@ -2,6 +2,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -12,13 +14,14 @@ import java.util.Queue;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 
 /**
  * A map which is being played
  * @author campberobe1
  *
  */
-public class Game implements ActionListener{
+public class Game {
 	// The map that this instance of Game is using
 	private GameMap map;
 
@@ -56,6 +59,10 @@ public class Game implements ActionListener{
 	private int[] scores = { 300, 100, 50, 0 };
 	private int[] healthChange = { 10, -5, -10, -20 };
 
+	// The current position of the mouse
+	private int mouseX = -1;
+	private int mouseY = -1;
+
 	/**
 	 * Constructor; instantiates Game.
 	 * @param map The GameMap which this instance will play.
@@ -72,7 +79,15 @@ public class Game implements ActionListener{
 		createWindow();
 
 		// Set the timer to do the game loop
-		timer = new Timer(GameMenu.GAME_TICK_TIME, this);
+		class InnerActionListener implements ActionListener {
+			public void actionPerformed(ActionEvent e){
+				// If it's the timer, do the game loop
+				if(e.getSource().equals(timer)){
+					doGame();
+				}
+			}
+		}
+		timer = new Timer(GameMenu.GAME_TICK_TIME, new InnerActionListener());
 		timer.setInitialDelay(0);
 		timer.start();
 	}
@@ -94,6 +109,9 @@ public class Game implements ActionListener{
 		// Initialise its attributes
 		mainPanel.init(circleSize, approachTime);
 
+		mainPanel.setFocusable(true);
+		mainPanel.requestFocus();
+
 		// Add the GUI panel to draw on
 		guiPanel = new GameGUI();
 		guiPanel.setPreferredSize(new Dimension(1000,70));
@@ -104,14 +122,24 @@ public class Game implements ActionListener{
 		mainFrame.setVisible(true);
 
 		// Set the mouse listener on the screen
-		class InnerMouseListener extends MouseAdapter{
+		class InnerMouseListener extends MouseInputAdapter{
 			public void mouseClicked(MouseEvent e){
 				doMouse(e);
 			}
+			public void mouseMoved(MouseEvent e){
+				mouseX = e.getX();
+				mouseY = e.getY();
+			}
 		}
-		mainPanel.addMouseListener(new InnerMouseListener());
+		mainPanel.addMouseMotionListener(new InnerMouseListener());
 
-
+		// Set the key listener on the screen
+		class InnerKeyListener extends KeyAdapter{
+			public void keyPressed(KeyEvent e){
+				doKey(e);
+			}
+		}
+		mainPanel.addKeyListener(new InnerKeyListener());
 	}
 
 	/**
@@ -121,10 +149,13 @@ public class Game implements ActionListener{
 		mainFrame.dispose();
 	}
 
-	public void actionPerformed(ActionEvent e){
-		// If it's the timer, do the game loop
-		if(e.getSource().equals(timer)){
-			doGame();
+	/**
+	 * Handles key actions
+	 */
+	public void doKey(KeyEvent e){
+		// If it's one of the game keys, check to see if the current mouse position is on an element
+		if(e.getKeyChar() == GameMenu.GAME_KEY_1 || e.getKeyChar() == GameMenu.GAME_KEY_2){
+			elementCheck(mouseX, mouseY);
 		}
 	}
 
@@ -136,22 +167,37 @@ public class Game implements ActionListener{
 		int x = e.getX();
 		int y = e.getY();
 
+		// And check current elements to see which one it's on (if any)
+		elementCheck(x,y);
+	}
+
+	/**
+	 * Processes a click or key press at the specified position
+	 */
+	private void elementCheck(int x, int y){
 		// Scroll through all the circles which are currently on the screen
 		Iterator<Element> iter = currentElements.iterator();
-		List<Element> elementsToRemove = new ArrayList<Element>();
+		ArrayList<Element> elementsToRemove = new ArrayList<Element>();
 		while(iter.hasNext()){
 			Element element = iter.next();
 			// If they are very close to the mouse click, remove the circle
 			double radius = Math.sqrt(Math.pow(x-element.getX(),2) + Math.pow(y-element.getY(),2));
-			if(radius < circleSize/2){
-				elementsToRemove.add(element);
-				break;
+				if(radius < circleSize/2){
+					elementsToRemove.add(element);
+					break;
+				}
+			}
+
+		Element e = null;
+		// Find the element that has spent the longest time on the screen
+		for(Element element : elementsToRemove){
+			if(e == null || element.getTime() < e.getTime()){
+				e = element;
 			}
 		}
 
-		for(Element element : elementsToRemove){
-			removeElement(element, (int)(System.currentTimeMillis()-mapStartTime), true);
-		}
+		// And remove it
+		if(e != null) removeElement(e, (int)(System.currentTimeMillis()-mapStartTime), true);
 	}
 
 	/**
