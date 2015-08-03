@@ -5,6 +5,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.Queue;
 import java.util.List;
 
 import javafx.scene.media.*;
+import javafx.util.Duration;
 import javafx.embed.swing.*;
 
 import javax.swing.*;
@@ -37,6 +40,9 @@ public class Game {
 
 	// The game timer
 	private Timer timer;
+	
+	// The sound player
+	private MediaPlayer audioPlayer;
 
 	// The queue of elements to be displayed
 	private Queue<Element> elements = new LinkedList<Element>();
@@ -51,6 +57,8 @@ public class Game {
 	private int currentMapTime;
 	// The system time at which the map started
 	private long mapStartTime;
+	// The time at which the audio for the map should start
+	private int audioStartTime;
 
 	// To have a unique id for every circle within a certain map
 	private int currentCircleId = 0;
@@ -82,8 +90,10 @@ public class Game {
 		approachTime = map.getAR();
 		circleSize = map.getCS();
 		
+		audioStartTime = map.getAudioStartTime();
+		
 		// Begins playing the audio of the map
-		playAudio(map.getAudio());
+		//playAudio(map.getAudio());
 
 		createWindow();
 
@@ -110,7 +120,13 @@ public class Game {
 		mainFrame.setSize(GameMenu.GAME_WINDOW_DEFAULT_WIDTH, GameMenu.GAME_WINDOW_DEFAULT_HEIGHT);
 		mainFrame.setLocation(GameMenu.GAME_WINDOW_INITIAL_X, GameMenu.GAME_WINDOW_INITIAL_Y);
 		mainFrame.setResizable(GameMenu.GAME_WINDOW_RESIZABLE);
-		mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		// Calls the terminate method when the window is closed
+		mainFrame.addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				terminate();
+			}
+		});
 
 		// And the panel to draw on inside it
 		mainPanel = new GameDraw();
@@ -155,6 +171,7 @@ public class Game {
 	 * Terminates the game
 	 */
 	public void terminate(){
+		//stopAudio();
 		mainFrame.dispose();
 	}
 
@@ -337,7 +354,15 @@ public class Game {
 		JFXPanel panel = new JFXPanel();
 		File file = new File(audioFilename);
 		Media media = new Media(file.toURI().toString());
-		MediaPlayer player = new MediaPlayer(media);
-		player.play();
+		audioPlayer = new MediaPlayer(media);
+		audioPlayer.setStartTime(new Duration(audioStartTime));
+		audioPlayer.play();
+	}
+	
+	/**
+	 * Stops the audio from being played.
+	 */
+	private void stopAudio(){
+		audioPlayer.stop();
 	}
 }

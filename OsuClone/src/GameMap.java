@@ -29,12 +29,12 @@ public class GameMap {
 
 	// The name of the map
 	private String mapName;
-	// The amount of elements in the map
-	private int elementCount;
 	// The audio file corresponding to this map
 	private String audio;
 	// The queue of elements in the map
 	private Queue<Element> elements;
+	// The time (ms) when the map's audio should start
+	private int audioStartTime;
 
 	// Overall difficulty governs the time accuracy required to hit elements (minimum to get 100, 50, miss)
 	private int[] overallDifficulty;
@@ -50,8 +50,8 @@ public class GameMap {
 	public GameMap(Scanner s){
 		// First, read the header elements
 		mapName = s.nextLine();
-		elementCount = s.nextInt();
 		audio = s.next();
+		audioStartTime = s.nextInt();
 
 		overallDifficulty = OVERALL_DIFFICULTY_VALUES[s.nextInt()];
 		approachRate = APPROACH_RATE_VALUES[s.nextInt()];
@@ -61,7 +61,7 @@ public class GameMap {
 		elements = new LinkedList<Element>();
 
 		// And scroll through the scanner, finding all the values
-		for(int i = 0; i < elementCount; i++){
+		while(s.hasNextLine()){
 			int elementType = s.nextInt();
 			// Make a circle
 			if(elementType == 1){
@@ -124,5 +124,12 @@ public class GameMap {
 	 */
 	public String getAudio(){
 		return audio;
+	}
+	
+	/**
+	 * Returns the time at which the audio file should start for this map
+	 */
+	public int getAudioStartTime(){
+		return audioStartTime;
 	}
 }

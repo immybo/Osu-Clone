@@ -5,6 +5,7 @@
 		<accessrules>
 			<accessrule kind="accessible" pattern="javafx/scene/media/*"/>
 			<accessrule kind="accessible" pattern="javafx/embed/swing/*"/>
+			<accessrule kind="accessible" pattern="javafx/util/*"/>
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
