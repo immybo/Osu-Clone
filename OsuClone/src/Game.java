@@ -105,7 +105,7 @@ public class Game {
 		// And the panel to draw on inside it
 		mainPanel = new GameDraw();
 		// Initialise its attributes
-		mainPanel.init(circleSize, approachTime, timeOffsets[2]);
+		mainPanel.init(circleSize, approachTime, timeOffsets[2], this);
 
 		mainPanel.setFocusable(true);
 		mainPanel.requestFocus();
@@ -309,5 +309,12 @@ public class Game {
 			currentCircleId++;
 		}
 		elements.clear();
+	}
+	
+	/**
+	 * Returns the current time in the map
+	 */
+	public int getMapTime(){
+		return currentMapTime;
 	}
 }

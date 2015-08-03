@@ -9,6 +9,8 @@ import java.util.*;
  *
  */
 public class GameDraw extends JPanel{
+	// The instance of game that this is drawing for
+	private Game game;
 	// The time it takes for an approach circle to reach the size of a circle
 	private int approachRate;
 	// The size of all circles
@@ -32,12 +34,13 @@ public class GameDraw extends JPanel{
 	private long previousTime;
 
 	/**
-	 * Initialises circle size and approach rate
+	 * Initialises map attributes and provides the instance of game
 	 */
-	public void init(int circleSize, int approachRate, int overallDifficulty){
+	public void init(int circleSize, int approachRate, int overallDifficulty, Game game){
 		this.circleSize = circleSize;
 		this.approachRate = approachRate;
 		this.accuracy = overallDifficulty;
+		this.game = game;
 		approachSize = this.circleSize*2;
 		previousTime = System.currentTimeMillis();
 	}
@@ -83,8 +86,15 @@ public class GameDraw extends JPanel{
 			// Circle fadeout
 			int fade = 0;
 			if(next.approachCircleSize < circleSize){
-				fade = (int)((circleSize - next.approachCircleSize)*(255/circleSize));
+				fade = (int)(255 * ((double)(game.getMapTime()-next.getTime())/accuracy));
+				if(fade < 0){
+					fade = 0;
+				}
+				else if(fade > 255){
+					fade = 255;
+				}
 			}
+			
 			// Draw every circle
 			g2d.setColor(new Color(fillColor.getRed(), fillColor.getBlue(), fillColor.getGreen(), 255-fade));
 			g2d.fillOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
