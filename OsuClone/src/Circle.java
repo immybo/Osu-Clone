@@ -11,7 +11,7 @@ public class Circle implements Element {
 
 	// The size of the approach circle; not used within this class
 	// But should be managed outside of it
-	public int approachCircleSize = 0;
+	public double approachCircleSize = 0;
 
 	/**
 	 * Constructor; instantiates circle.

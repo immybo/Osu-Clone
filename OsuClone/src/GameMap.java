@@ -11,16 +11,16 @@ public class GameMap {
 	// There are 10 levels of the attributes, these map the 1-10 level to the actual value
 	// Overall difficulty is in ms, and gives an array for getting 100-50-miss
 	private static final int[][] OVERALL_DIFFICULTY_VALUES = {
-		{2000, 3000, 4000},
-		{1500, 2250, 3000},
-		{1100, 1650, 2200},
+		{1000, 1500, 2000},
 		{800, 1200, 1600},
-		{550, 825, 1100},
+		{600, 900, 1200},
+		{400, 600, 800},
 		{300, 450, 600},
 		{200, 300, 400},
 		{140, 210, 280},
-		{80, 120, 160},
-		{40, 60, 80}
+		{90, 135, 180},
+		{50, 75, 100},
+		{30, 45, 60}
 	};
 	// Approach rate is in ms
 	private static final int[] APPROACH_RATE_VALUES = { 6000, 4500, 3500, 2500, 1800, 1300, 1100, 900, 700, 500 };

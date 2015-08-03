@@ -196,7 +196,7 @@ public class Game {
 		}
 
 		// And remove it
-		if(e != null) removeElement(e, (int)(System.currentTimeMillis()-mapStartTime), true);
+		if(e != null) removeElement(e, true);
 	}
 
 	/**
@@ -204,7 +204,7 @@ public class Game {
 	 * @param element The element to remove
 	 * @param wasClicked If the element was clicked to remove or not (if not, it must have timed out)
 	 */
-	private void removeElement(Element element, int time, boolean wasClicked){
+	private void removeElement(Element element, boolean wasClicked){
 		if(element == null) { return; }
 
 		// Dequeue the element
@@ -212,13 +212,15 @@ public class Game {
 
 		// Figure out the time offset from when the element was supposed to be clicked
 		int supposedTime = element.getTime();
-		int timeOffset = Math.abs(time - supposedTime);
-		System.out.println(timeOffset);
+		long timeOffset = Math.abs(System.currentTimeMillis() - mapStartTime - supposedTime);
+
 		int classification = 0;
 		if(wasClicked){
-			if(timeOffset > timeOffsets[0]) classification = 1;
-			if(timeOffset > timeOffsets[1]) classification = 2;
-			if(timeOffset > timeOffsets[2]) classification = 3;
+			if(timeOffset < timeOffsets[0]) classification = 0;
+			else if(timeOffset < timeOffsets[1]) classification = 1;
+			else if(timeOffset < timeOffsets[2]) classification = 2;
+			else classification = 3;
+
 		}
 		else{
 			// If it was never clicked, then it was a miss
@@ -274,7 +276,7 @@ public class Game {
 		Queue<Element> disposalQueue = mainPanel.getDisposalQueue();
 		// And remove them all
 		while(!disposalQueue.isEmpty()){
-			removeElement(disposalQueue.poll(), (int)(System.currentTimeMillis()-mapStartTime), false);
+			removeElement(disposalQueue.poll(), false);
 		}
 	}
 

@@ -56,33 +56,42 @@ public class GameDraw extends JPanel{
 		long dT = currentTime - previousTime;
 		// Size reduction amount
 		double circleLoss = (double)(dT * (approachSize-circleSize))/approachRate;
+		previousTime = currentTime;
 
 		for(Circle next : circles){
-			// Draw every circle
-			g2d.setColor(fillColor);
-			g2d.fillOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
-			g2d.setColor(borderColor);
-			g2d.drawOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
 
 			// Decrease the size of every approach circle
 			next.approachCircleSize -= circleLoss;
 
 			// Check if the circle is supposed to disappear
 			// (Which we can tell from the approach circle size compared to the normal circle size, the accuracy required, and the approach rate
-			if(next.approachCircleSize < circleSize - (approachSize-circleSize)*(accuracy/approachRate)){
+			if(next.approachCircleSize < circleSize - accuracy*(approachSize-circleSize)/approachRate){
 				// If it is supposed to disappear, add it to the disposal queue
 				disposalElements.offer(next);
 				continue;
 			}
 
-			// Draw the approach circle if not
-			g2d.setColor(approachColor);
-			int approachX = next.getX()-circleSize/2-(next.approachCircleSize-circleSize)/2;
-			int approachY = next.getY()-circleSize/2-(next.approachCircleSize-circleSize)/2;
-			g2d.drawOval(approachX, approachY, next.approachCircleSize, next.approachCircleSize);
+			// If the approach circle would be smaller than the circle, we don't actually want to draw it, but we do want to start fading the circle out
+			if(next.approachCircleSize > circleSize){
+				// Draw the approach circle if not
+				g2d.setColor(approachColor);
+				double approachX = next.getX()-circleSize/2-(next.approachCircleSize-circleSize)/2;
+				double approachY = next.getY()-circleSize/2-(next.approachCircleSize-circleSize)/2;
+				g2d.drawOval((int)approachX, (int)approachY, (int)next.approachCircleSize, (int)next.approachCircleSize);
+			}
+
+			// Circle fadeout
+			int fade = 0;
+			if(next.approachCircleSize < circleSize){
+				fade = (int)((circleSize - next.approachCircleSize)*(255/circleSize));
+			}
+			// Draw every circle
+			g2d.setColor(new Color(fillColor.getRed(), fillColor.getBlue(), fillColor.getGreen(), 255-fade));
+			g2d.fillOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
+			g2d.setColor(borderColor);
+			g2d.drawOval(next.getX()-circleSize/2, next.getY()-circleSize/2, circleSize, circleSize);
 		}
 
-		previousTime = currentTime;
 	}
 
 	/**

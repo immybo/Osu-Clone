@@ -29,7 +29,7 @@ public class GameGUI extends JPanel{
 		g2d.setColor(new Color((int)(2.5*health),0,0));
 		g2d.fillRect(110, 10, health*2, 50);
 		g2d.setColor(Color.BLACK);
-		g2d.drawRect(110, 10, health*2, 50);
+		g2d.drawRect(110, 10, 200, 50);
 		g2d.drawString("Health: ", 30, 30);
 
 		// Draw a line below the gui
