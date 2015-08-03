@@ -5,11 +5,18 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.List;
+
+import javafx.scene.media.*;
+import javafx.embed.swing.*;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -74,6 +81,9 @@ public class Game {
 		timeOffsets = map.getOD();
 		approachTime = map.getAR();
 		circleSize = map.getCS();
+		
+		// Begins playing the audio of the map
+		playAudio(map.getAudio());
 
 		createWindow();
 
@@ -316,5 +326,18 @@ public class Game {
 	 */
 	public int getMapTime(){
 		return currentMapTime;
+	}
+	
+	/**
+	 * Plays the audio that is mapped to the current map;
+	 * Does nothing if the audio file name was "null".
+	 */
+	private void playAudio(String audioFilename){
+		if(audioFilename == null) return;
+		JFXPanel panel = new JFXPanel();
+		File file = new File(audioFilename);
+		Media media = new Media(file.toURI().toString());
+		MediaPlayer player = new MediaPlayer(media);
+		player.play();
 	}
 }

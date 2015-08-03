@@ -118,4 +118,11 @@ public class GameMap {
 	public int getCS(){
 		return circleSize;
 	}
+	
+	/**
+	 * Returns the audio file name for this map
+	 */
+	public String getAudio(){
+		return audio;
+	}
 }
