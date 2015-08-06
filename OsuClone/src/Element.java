@@ -1,5 +1,14 @@
 /**
- * Gives basic methods for all elements in MyOsu.
+ * Outlines get, set and equals methods for all element types in MyOsu!.
+ *
+ * There are 3 types of elements:
+ * - Circles, on which the player must click at the appropriate time.
+ * - Sliders, which the player must click and drag at the appropriate time and speed.
+ * - Spinners, when the player must click and drag around the center of the spinner as fast as possible.
+ *
+ * In general, circles and then sliders are the most common elements, with
+ * spinners making up a minority of elements in any given map.
+ *
  * @author campberobe1
  */
 public interface Element {

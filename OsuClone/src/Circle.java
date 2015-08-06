@@ -1,7 +1,13 @@
 /**
- * A circle in a game of MyOsu.
- * @author campberobe1
+ * A circle in a game of MyOsu; implements Element.
  *
+ * Circles usually make up the majority of elements in a map, and can
+ * be considered the most 'basic' element. The player must click them
+ * at the appropriate time, which is indicated by an 'approach circle';
+ * a larger circle which decreases in size until it is the same size as
+ * the main circle when the player should click it.
+ *
+ * @author campberobe1
  */
 public class Circle implements Element {
 	private int startTime;
