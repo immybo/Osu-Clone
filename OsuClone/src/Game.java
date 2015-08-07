@@ -254,10 +254,9 @@ public class Game {
 		// The proportion of time between the start and end of the slider
 		double timeProportion = (currentMapTime - activeSlider.getTime() + 0.0) / (activeSlider.getEndTime() - activeSlider.getTime() + 0.0);
 
-		double activeSliderAngleRads = activeSlider.getAngle() / 180 * Math.PI;
 		// The coordinates that the cursor is required to be within range of
-		int reqX = activeSlider.getX() + (int)(Math.cos(activeSliderAngleRads) * timeProportion * activeSlider.getLength());
-		int reqY = activeSlider.getY() + (int)(Math.sin(activeSliderAngleRads) * timeProportion * activeSlider.getLength());
+		int reqX = activeSlider.getX() + (int)(Math.cos(activeSlider.getAngle()) * timeProportion * activeSlider.getLength());
+		int reqY = activeSlider.getY() + (int)(Math.sin(activeSlider.getAngle()) * timeProportion * activeSlider.getLength());
 
 		// The amount which the cursor is out by
 		double offset = Math.sqrt(Math.pow(mouseX-reqX, 2) + Math.pow(mouseY-reqY, 2));
@@ -291,10 +290,9 @@ public class Game {
 			// Sliders:
 			if(element.getElementType() == 2){
 				Slider slider = (Slider)element;
-				double sliderRads = slider.getAngle() / 180 * Math.PI;
 				// Make it the active slider if the mouse is on the follow circle
-				int sliderFollowX = (int)(slider.getX() + slider.followCirclePos * Math.cos(sliderRads));
-				int sliderFollowY = (int)(slider.getY() + slider.followCirclePos * Math.sin(sliderRads));
+				int sliderFollowX = (int)(slider.getX() + slider.followCirclePos * Math.cos(slider.getAngle()));
+				int sliderFollowY = (int)(slider.getY() + slider.followCirclePos * Math.sin(slider.getAngle()));
 				double radius = Math.sqrt(Math.pow(x-sliderFollowX,2) + Math.pow(y-sliderFollowY,2));
 				if(radius < circleSize/2){
 					activeSlider = (Slider)element;

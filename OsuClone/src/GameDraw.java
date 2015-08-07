@@ -133,21 +133,18 @@ public class GameDraw extends JPanel{
 			return;
 		}
 
-		// Convert the angle to radians for trigonometric calculations
-		double angleRads = slider.getAngle() / 180 * Math.PI;
-
 		g2d.setColor(sliderColor);
 		// Draw a diagram to understand these points
 		// Depends on the angle of the slider, so we can't just use drawRectangle
-		int x1 = (int)(slider.getX() + Math.sin(angleRads)*(circleSize/2));
-		int x2 = (int)(slider.getX() - Math.sin(angleRads)*(circleSize/2));
-		int x3 = (int)(slider.getX() + Math.cos(angleRads)*(slider.getLength()) - Math.sin(angleRads)*(circleSize/2));
-		int x4 = (int)(slider.getX() + Math.cos(angleRads)*(slider.getLength()));
+		int x1 = (int)(slider.getX() - Math.sin(slider.getAngle())*(circleSize/2));
+		int x2 = (int)(slider.getX() + Math.sin(slider.getAngle())*(circleSize/2));
+		int x3 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) + Math.sin(slider.getAngle())*(circleSize/2));
+		int x4 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) - Math.sin(slider.getAngle())*(circleSize/2));
 
-		int y1 = (int)(slider.getY() + Math.cos(angleRads)*(circleSize/2));
-		int y2 = (int)(slider.getY() - Math.cos(angleRads)*(circleSize/2));
-		int y3 = (int)(slider.getY() + Math.sin(angleRads)*(slider.getLength()) - Math.cos(angleRads)*(circleSize/2));
-		int y4 = (int)(slider.getY() + Math.sin(angleRads)*(slider.getLength()) + Math.cos(angleRads)*(circleSize/2));
+		int y1 = (int)(slider.getY() + Math.cos(slider.getAngle())*(circleSize/2));
+		int y2 = (int)(slider.getY() - Math.cos(slider.getAngle())*(circleSize/2));
+		int y3 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) - Math.cos(slider.getAngle())*(circleSize/2));
+		int y4 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) + Math.cos(slider.getAngle())*(circleSize/2));
 
 		int[] xPos = {x1, x2, x3, x4};
 		int[] yPos = {y1, y2, y3, y4};
@@ -157,7 +154,7 @@ public class GameDraw extends JPanel{
 
 		// And two circles for either end of the slider
 		drawFilledCircle(g2d, slider.getX(), slider.getY(), sliderEndColor, Color.BLACK);
-		drawFilledCircle(g2d, slider.getX() + (int)(Math.cos(angleRads)*slider.getLength()), slider.getY() + (int)(Math.sin(angleRads)*slider.getLength()), sliderEndColor, Color.BLACK);
+		drawFilledCircle(g2d, slider.getX() + (int)(Math.cos(slider.getAngle())*slider.getLength()), slider.getY() + (int)(Math.sin(slider.getAngle())*slider.getLength()), sliderEndColor, Color.BLACK);
 
 		// Check if the slider has started yet;
 		// If so, draw a follow circle
@@ -165,8 +162,8 @@ public class GameDraw extends JPanel{
 			// Increment the follow circle position
 			slider.followCirclePos += (slider.getLength()+0.0)/(slider.getEndTime()-slider.getTime())*dT;
 			// Draw the follow circle
-			int followX = (int)(slider.getX() + Math.cos(angleRads)*slider.followCirclePos);
-			int followY = (int)(slider.getY() + Math.sin(angleRads)*slider.followCirclePos);
+			int followX = (int)(slider.getX() + Math.cos(slider.getAngle())*slider.followCirclePos);
+			int followY = (int)(slider.getY() + Math.sin(slider.getAngle())*slider.followCirclePos);
 
 			drawFilledCircle(g2d, followX, followY, followCircleColor, Color.BLACK);
 		}

@@ -20,7 +20,7 @@ public class Slider implements Element {
 	// The angle which the slider faces. This is
 	// - 0 degrees for the end of the slider being directly to the right of its start
 	// - 90 degrees for the end of the slider being directly down from its start, etc.
-	private int angle;
+	private double angle;
 
 	// The x and y positions of the start of the slider
 	private int x;
@@ -76,10 +76,10 @@ public class Slider implements Element {
 	}
 
 	/**
-	 * Returns the angle of the slider
+	 * Returns the angle of the slider in radians
 	 */
-	public int getAngle(){
-		return angle;
+	public double getAngle(){
+		return angle/180*Math.PI;
 	}
 
 	/**
