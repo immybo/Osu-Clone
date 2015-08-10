@@ -1,3 +1,4 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import java.io.*;
@@ -41,12 +42,14 @@ public class GameMenu {
 
 	private static String MAP_FILE = "maps.txt";
 	private static String OPTION_FILE = "options.txt";
+	private static String DEFAULT_BG = "defaultbg.jpg";
 
 	/** MODS ACTIVE **/
 	private boolean isHidden = false;
 
 	/** JCOMPONENTS **/
 	private JFrame menuOuterFrame;
+	private JPanel backgroundPanel;
 	private JPanel leftPanel;
 	private JPanel rightPanel;
 
@@ -61,6 +64,9 @@ public class GameMenu {
 	private Map<JButton, String> mapList = new HashMap<JButton, String>();
 
 	private Game currentGame = null;
+	
+	// The image to draw as the background
+	private Image bgImage = null;
 
 	/**
 	 * Begins the game by instantiating GameMenu
@@ -93,6 +99,9 @@ public class GameMenu {
 		// Using a GridLayout for the outer frame
 		menuOuterFrame.setLayout(new GridLayout());
 
+		// First, create a panel for the song/menu background
+		initBackground();
+		
 		// Create two JPanels: one for regular buttons and one for maps
 		leftPanel = new JPanel();
 		leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
@@ -107,6 +116,7 @@ public class GameMenu {
 		leftPanel.add(optionButton);
 
 		hiddenCheckbox = new JCheckBox("Hidden");
+		hiddenCheckbox.setOpaque(false);
 		leftPanel.add(hiddenCheckbox);
 
 		// And fill the map buttons from getMaps
@@ -120,6 +130,31 @@ public class GameMenu {
 		}
 
 		menuOuterFrame.setVisible(true);
+	}
+	
+	/**
+	 * Initialises the background of the menu frame; uses a custom JFrame which paints an image
+	 */
+	private void initBackground(){
+		// Finds the default background to set at the start
+		try{
+			bgImage = ImageIO.read(new File(DEFAULT_BG));
+		}
+		catch(IOException e){
+			System.out.println("Could not read from image file.");
+		}
+		
+		// Private inner JPanel-extending class to define drawing the background image
+		class MenuBackground extends JPanel {
+			public void paintComponent(Graphics g){
+				if(bgImage != null){
+					g.drawImage(bgImage,0,0,menuOuterFrame.getWidth(),menuOuterFrame.getHeight(),this);
+				}
+			}
+		}
+		
+		// Add a new MenuBackground
+		menuOuterFrame.setContentPane(new MenuBackground());
 	}
 
 	/**

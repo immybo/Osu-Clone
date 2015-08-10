@@ -65,7 +65,13 @@ public class GameMap {
 			int elementType = s.nextInt();
 			// Make a circle
 			if(elementType == 1){
+				// A circle has 3 parameters: start time, and x and y position
 				elements.offer(new Circle(s.nextInt(), s.nextInt(), s.nextInt()));
+			}
+			// Make a slider
+			if(elementType == 2){
+				// A slider has 6 parameters: start time, end time, length, angle, and x and y position (all integers)
+				elements.offer(new Slider(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt()));
 			}
 		}
 
@@ -118,14 +124,14 @@ public class GameMap {
 	public int getCS(){
 		return circleSize;
 	}
-	
+
 	/**
 	 * Returns the audio file name for this map
 	 */
 	public String getAudio(){
 		return audio;
 	}
-	
+
 	/**
 	 * Returns the time at which the audio file should start for this map
 	 */

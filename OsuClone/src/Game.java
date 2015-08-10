@@ -8,9 +8,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -40,7 +37,7 @@ public class Game {
 
 	// The game timer
 	private Timer timer;
-	
+
 	// The sound player
 	private MediaPlayer audioPlayer;
 
@@ -60,8 +57,8 @@ public class Game {
 	// The time at which the audio for the map should start
 	private int audioStartTime;
 
-	// To have a unique id for every circle within a certain map
-	private int currentCircleId = 0;
+	// To have a unique id for every element within a certain map
+	private int currentElementId = 0;
 
 	// The score and current health of the player
 	private int score = 0;
@@ -76,6 +73,12 @@ public class Game {
 	private int mouseX = -1;
 	private int mouseY = -1;
 
+	// Whether the mouse (or key) is currently being held down or not
+	private boolean mouseDown = false;
+
+	// The slider which is currently being held down; null if none is being held down
+	private Slider activeSlider = null;
+
 	/**
 	 * Constructor; instantiates Game.
 	 * @param map The GameMap which this instance will play.
@@ -89,9 +92,9 @@ public class Game {
 		timeOffsets = map.getOD();
 		approachTime = map.getAR();
 		circleSize = map.getCS();
-		
+
 		audioStartTime = map.getAudioStartTime();
-		
+
 		// Begins playing the audio of the map
 		playAudio(map.getAudio());
 
@@ -151,8 +154,16 @@ public class Game {
 				doMouse(e);
 			}
 			public void mouseMoved(MouseEvent e){
-				mouseX = e.getX();
-				mouseY = e.getY();
+				doMouse(e);
+			}
+			public void mouseDragged(MouseEvent e){
+				doMouse(e);
+			}
+			public void mouseReleased(MouseEvent e){
+				doMouse(e);
+			}
+			public void mousePressed(MouseEvent e){
+				doMouse(e);
 			}
 		}
 		mainPanel.addMouseListener(new InnerMouseListener());
@@ -161,6 +172,9 @@ public class Game {
 		// Set the key listener on the screen
 		class InnerKeyListener extends KeyAdapter{
 			public void keyPressed(KeyEvent e){
+				doKey(e);
+			}
+			public void keyReleased(KeyEvent e){
 				doKey(e);
 			}
 		}
@@ -179,9 +193,21 @@ public class Game {
 	 * Handles key actions
 	 */
 	public void doKey(KeyEvent e){
-		// If it's one of the game keys, check to see if the current mouse position is on an element
-		if(e.getKeyChar() == GameMenu.GAME_KEY_1 || e.getKeyChar() == GameMenu.GAME_KEY_2){
+		// If a keyevent was passed but it wasn't one of the game keys, do nothing
+		if(e.getKeyChar() != GameMenu.GAME_KEY_1 && e.getKeyChar() != GameMenu.GAME_KEY_2) return;
+
+		// If a key was pressed, set the 'mouse' to be down and check for elements it could be down on
+		if(e.getID() == KeyEvent.KEY_PRESSED && mouseDown == false){
+			mouseDown = true;
 			elementCheck(mouseX, mouseY);
+		}
+
+		// If it was released, the mouse is no longer down and sliders should be checked
+		else if(e.getID() == KeyEvent.KEY_RELEASED && mouseDown == true){
+			mouseDown = false;
+			if(activeSlider != null){
+				endSliderDrag();
+			}
 		}
 	}
 
@@ -189,12 +215,57 @@ public class Game {
 	 * Handles mouse actions
 	 */
 	private void doMouse(MouseEvent e){
-		// Find the co-ordinates of the mouse click
-		int x = e.getX();
-		int y = e.getY();
+		// Find the new co-ordinates of the mouse
+		mouseX = e.getX();
+		mouseY = e.getY();
 
-		// And check current elements to see which one it's on (if any)
-		elementCheck(x,y);
+		// If it was pressed,
+		if(e.getID() == MouseEvent.MOUSE_PRESSED){
+			mouseDown = true;
+			// Check current elements to see which one it's on (if any)
+			elementCheck(mouseX, mouseY);
+		}
+
+		// Otherwise, if it was released, check if it was on a slider
+		else if(e.getID() == MouseEvent.MOUSE_RELEASED){
+			mouseDown = false;
+			if(activeSlider != null){
+				endSliderDrag();
+			}
+		}
+	}
+
+	/**
+	 * Stops the slider that is currently being dragged from being dragged.
+	 * Does not actually fail the slider; merely stops accruing 'points'.
+	 */
+	private void endSliderDrag(){
+		activeSlider = null;
+	}
+
+	/**
+	 * Checks to see that the mouse is down and on the required position on the active slider,
+	 * and increments the active's slider points if it is.
+	 */
+	private void changeActiveSliderPoints(){
+		// Don't do anything if there isn't a slider active!
+		if(activeSlider == null) return;
+
+		// The proportion of time between the start and end of the slider
+		double timeProportion = (currentMapTime - activeSlider.getTime() + 0.0) / (activeSlider.getEndTime() - activeSlider.getTime() + 0.0);
+
+		// The coordinates that the cursor is required to be within range of
+		int reqX = activeSlider.getX() + (int)(Math.cos(activeSlider.getAngle()) * timeProportion * activeSlider.getLength());
+		int reqY = activeSlider.getY() + (int)(Math.sin(activeSlider.getAngle()) * timeProportion * activeSlider.getLength());
+
+		// The amount which the cursor is out by
+		double offset = Math.sqrt(Math.pow(mouseX-reqX, 2) + Math.pow(mouseY-reqY, 2));
+		//System.out.println("offset : " + offset);
+		//System.out.println("x: " + mouseX + " y : " + mouseY);
+
+		if(offset < circleSize/2){
+			activeSlider.sliderPoints++;
+		}
 	}
 
 	/**
@@ -204,15 +275,31 @@ public class Game {
 		// Scroll through all the circles which are currently on the screen
 		Iterator<Element> iter = currentElements.iterator();
 		ArrayList<Element> elementsToRemove = new ArrayList<Element>();
+
 		while(iter.hasNext()){
 			Element element = iter.next();
-			// If they are very close to the mouse click, remove the circle
-			double radius = Math.sqrt(Math.pow(x-element.getX(),2) + Math.pow(y-element.getY(),2));
+			// Circles:
+			if(element.getElementType() == 1){
+				// If they are very close to the mouse click, remove the circle
+				double radius = Math.sqrt(Math.pow(x-element.getX(),2) + Math.pow(y-element.getY(),2));
 				if(radius < circleSize/2){
 					elementsToRemove.add(element);
 					break;
 				}
 			}
+			// Sliders:
+			if(element.getElementType() == 2){
+				Slider slider = (Slider)element;
+				// Make it the active slider if the mouse is on the follow circle
+				int sliderFollowX = (int)(slider.getX() + slider.followCirclePos * Math.cos(slider.getAngle()));
+				int sliderFollowY = (int)(slider.getY() + slider.followCirclePos * Math.sin(slider.getAngle()));
+				double radius = Math.sqrt(Math.pow(x-sliderFollowX,2) + Math.pow(y-sliderFollowY,2));
+				if(radius < circleSize/2){
+					activeSlider = (Slider)element;
+					break;
+				}
+			}
+		}
 
 		Element e = null;
 		// Find the element that has spent the longest time on the screen
@@ -234,34 +321,59 @@ public class Game {
 	private void removeElement(Element element, boolean wasClicked){
 		if(element == null) { return; }
 
+		int classification = 0;
+
 		// Dequeue the element
 		mainPanel.dequeueElement(element);
 
-		// Figure out the time offset from when the element was supposed to be clicked
-		int supposedTime = element.getTime();
-		long timeOffset = Math.abs(System.currentTimeMillis() - mapStartTime - supposedTime);
+		if(element.getElementType() == 1){
+			// Figure out the time offset for circles
+			int supposedTime = element.getTime();
+			long timeOffset = Math.abs(System.currentTimeMillis() - mapStartTime - supposedTime);
 
-		int classification = 0;
-		if(wasClicked){
-			if(timeOffset < timeOffsets[0]) classification = 0;
-			else if(timeOffset < timeOffsets[1]) classification = 1;
-			else if(timeOffset < timeOffsets[2]) classification = 2;
+			if(wasClicked){
+				if(timeOffset < timeOffsets[0]) classification = 0;
+				else if(timeOffset < timeOffsets[1]) classification = 1;
+				else if(timeOffset < timeOffsets[2]) classification = 2;
+				else classification = 3;
+
+			}
+			else{
+				// If it was never clicked, then it was a miss
+				classification = 3;
+			}
+		}
+
+		if(element.getElementType() == 2){
+			Slider slider = (Slider)element;
+			// Figure out the amount of points accrued for sliders
+			int totalSliderTime = slider.getEndTime() - slider.getTime();
+			// If the slider isn't being dragged at the end, remove some points
+			if(activeSlider != null && !slider.equals(activeSlider)) slider.sliderPoints *= 0.8;
+
+			if(slider.sliderPoints > (totalSliderTime+0.0)/20 * 0.9) classification = 0; // 90% of time held to get 300
+			else if(slider.sliderPoints > (totalSliderTime+0.0)/20 * 0.7) classification = 1; // 70% to get 100
+			else if(slider.sliderPoints > (totalSliderTime+0.0)/20 * 0.5) classification = 2; // 50% to get 50
 			else classification = 3;
-
-		}
-		else{
-			// If it was never clicked, then it was a miss
-			classification = 3;
 		}
 
-		score += scores[classification];
-		health += healthChange[classification];
-
-		if(health > 100) health = 100;
-		if(health < 0) health = 0;
+		// Change score and health
+		processElementRemoval(classification);
 
 		// And finally, remove the element from currentelements
 		currentElements.remove(element);
+	}
+
+	/**
+	 * Increments the score and health with the given score
+	 * @param scoreId 3, 2, 1, 0 for 300, 100, 50 or miss
+	 */
+	private void processElementRemoval(int scoreId){
+		score += scores[scoreId];
+		health += healthChange[scoreId];
+
+		if(health > 100) health = 100;
+		if(health < 0) health = 0;
 	}
 
 	/**
@@ -271,7 +383,10 @@ public class Game {
 		// Evaluate the new time
 		currentMapTime = (int)(System.currentTimeMillis()-mapStartTime);
 
-		// Check if any circles should be removed
+		// Update the active slider
+		if(mouseDown) changeActiveSliderPoints();
+
+		// Check if any elements should be removed
 		checkDisposal();
 		// Check if the next circle in the map should be shown
 		evaluateNext();
@@ -299,7 +414,7 @@ public class Game {
 	 * And removes them if they should be
 	 */
 	private void checkDisposal(){
-		// Grab the queue of circles that should be disposed
+		// Grab the queue of elements that should be disposed
 		Queue<Element> disposalQueue = mainPanel.getDisposalQueue();
 		// And remove them all
 		while(!disposalQueue.isEmpty()){
@@ -330,21 +445,21 @@ public class Game {
 	 */
 	private void drawQueue(){
 		for(Element e : elements){
-			e.setId(currentCircleId);
+			e.setId(currentElementId);
 			mainPanel.queueElement(e);
 			currentElements.add(e);
-			currentCircleId++;
+			currentElementId++;
 		}
 		elements.clear();
 	}
-	
+
 	/**
 	 * Returns the current time in the map
 	 */
 	public int getMapTime(){
 		return currentMapTime;
 	}
-	
+
 	/**
 	 * Plays the audio that is mapped to the current map;
 	 * Does nothing if the audio file name was "null".
@@ -358,11 +473,18 @@ public class Game {
 		audioPlayer.setStartTime(new Duration(audioStartTime));
 		audioPlayer.play();
 	}
-	
+
 	/**
 	 * Stops the audio from being played.
 	 */
 	private void stopAudio(){
 		audioPlayer.stop();
+	}
+
+	/**
+	 * Returns the current time in ms relative to the map start.
+	 */
+	public int getCurrentMapTime(){
+		return currentMapTime;
 	}
 }
