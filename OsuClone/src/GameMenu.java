@@ -12,6 +12,8 @@ import java.awt.event.*;
  */
 public class GameMenu {
 	/** PARAMETERS **/
+	private static boolean MENU_FULLSCREEN;
+	
 	private static int MAIN_WINDOW_DEFAULT_WIDTH;
 	private static int MAIN_WINDOW_DEFAULT_HEIGHT;
 
@@ -91,9 +93,18 @@ public class GameMenu {
 	private void initialiseMenu(){
 		// Create the outer JFrame for the selection menu
 		menuOuterFrame = new JFrame();
-		menuOuterFrame.setSize(MAIN_WINDOW_DEFAULT_WIDTH, MAIN_WINDOW_DEFAULT_HEIGHT);
-		menuOuterFrame.setLocation(MAIN_WINDOW_INITIAL_X, MAIN_WINDOW_INITIAL_Y);
-		menuOuterFrame.setResizable(MAIN_WINDOW_RESIZABLE);
+		
+		// Set the window to fullscreen or not, depending on which it is
+		if(MENU_FULLSCREEN){
+			menuOuterFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+			menuOuterFrame.setUndecorated(true);
+		}
+		else{
+			menuOuterFrame.setSize(MAIN_WINDOW_DEFAULT_WIDTH, MAIN_WINDOW_DEFAULT_HEIGHT);
+			menuOuterFrame.setLocation(MAIN_WINDOW_INITIAL_X, MAIN_WINDOW_INITIAL_Y);
+			menuOuterFrame.setResizable(MAIN_WINDOW_RESIZABLE);
+		}
+			
 		menuOuterFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		menuOuterFrame.setTitle("MyOsu! Menu");
 		// Using a GridLayout for the outer frame
@@ -249,6 +260,9 @@ public class GameMenu {
 	 */
 	private void setOptionParams(){
 		Map<String, Object> options = getOptions(OPTION_FILE);
+		
+		MENU_FULLSCREEN = (boolean)options.get("MENU_FULLSCREEN");
+		
 		MAIN_WINDOW_DEFAULT_WIDTH = (int)options.get("MAIN_WINDOW_DEFAULT_WIDTH");
 		MAIN_WINDOW_DEFAULT_HEIGHT = (int)options.get("MAIN_WINDOW_DEFAULT_HEIGHT");
 		MAIN_WINDOW_INITIAL_X = (int)options.get("MAIN_WINDOW_INITIAL_X");
