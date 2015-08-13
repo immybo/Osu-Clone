@@ -1,0 +1,3 @@
+TEST_OPTION;I'm an option!;true;
+TEST_OPTION2;So am I.;true;
+TEST_OPTION3;A 3rd option;true

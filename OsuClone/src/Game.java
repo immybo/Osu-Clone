@@ -96,7 +96,7 @@ public class Game {
 		audioStartTime = map.getAudioStartTime();
 
 		// Begins playing the audio of the map
-		playAudio(map.getAudio());
+		//playAudio(map.getAudio());
 
 		createWindow();
 
@@ -185,7 +185,7 @@ public class Game {
 	 * Terminates the game
 	 */
 	public void terminate(){
-		stopAudio();
+		//stopAudio();
 		mainFrame.dispose();
 	}
 

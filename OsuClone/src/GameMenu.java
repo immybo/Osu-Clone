@@ -13,7 +13,7 @@ import java.awt.event.*;
 public class GameMenu {
 	/** PARAMETERS **/
 	private static boolean MENU_FULLSCREEN;
-	
+
 	private static int MAIN_WINDOW_DEFAULT_WIDTH;
 	private static int MAIN_WINDOW_DEFAULT_HEIGHT;
 
@@ -43,7 +43,8 @@ public class GameMenu {
 	public static char GAME_KEY_2;
 
 	private static String MAP_FILE = "maps.txt";
-	private static String OPTION_FILE = "options.txt";
+	private static String PROGRAM_OPTION_FILE = "programOptions.txt";
+	private static String USER_OPTION_FILE = "userOptions.txt";
 	private static String DEFAULT_BG = "defaultbg.jpg";
 
 	/** MODS ACTIVE **/
@@ -58,6 +59,10 @@ public class GameMenu {
 	private JFrame optionFrame;
 	private JTextArea optionTextArea;
 
+	// All components which are mapped to user options
+	private Map<String, JRadioButton> optionComponentBoolean;
+	private Map<String, JTextField> optionComponentString;
+
 	private JButton optionButton;
 
 	private JCheckBox hiddenCheckbox;
@@ -65,8 +70,20 @@ public class GameMenu {
 	private java.util.List<JButton> mapButton = new ArrayList<JButton>();
 	private Map<JButton, String> mapList = new HashMap<JButton, String>();
 
+	// Maps of user option names to their respective values; one for each type of option
+	private Map<String, Integer> numUserOptions;
+	private Map<String, Boolean> boolUserOptions;
+	private Map<String, String> stringUserOptions;
+	// Option names that are readable by the user
+	private Map<String, String> readableOptionNames;
+
+	// Maps options that don't need to be read by the user
+	private Map<String, Integer> numOptions;
+	private Map<String, Boolean> boolOptions;
+	private Map<String, String> stringOptions;
+
 	private Game currentGame = null;
-	
+
 	// The image to draw as the background
 	private Image bgImage = null;
 
@@ -82,6 +99,8 @@ public class GameMenu {
 	 * Should be called at startup.
 	 */
 	public GameMenu(){
+		getOptions(PROGRAM_OPTION_FILE, false);
+		getOptions(USER_OPTION_FILE, true);
 		setOptionParams();
 		initialiseMenu();
 		initialiseButtons();
@@ -93,7 +112,7 @@ public class GameMenu {
 	private void initialiseMenu(){
 		// Create the outer JFrame for the selection menu
 		menuOuterFrame = new JFrame();
-		
+
 		// Set the window to fullscreen or not, depending on which it is
 		if(MENU_FULLSCREEN){
 			menuOuterFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -104,15 +123,16 @@ public class GameMenu {
 			menuOuterFrame.setLocation(MAIN_WINDOW_INITIAL_X, MAIN_WINDOW_INITIAL_Y);
 			menuOuterFrame.setResizable(MAIN_WINDOW_RESIZABLE);
 		}
-			
+
 		menuOuterFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		menuOuterFrame.setTitle("MyOsu! Menu");
 		// Using a GridLayout for the outer frame
 		menuOuterFrame.setLayout(new GridLayout());
 
+
 		// First, create a panel for the song/menu background
 		initBackground();
-		
+
 		// Create two JPanels: one for regular buttons and one for maps
 		leftPanel = new JPanel();
 		leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
@@ -142,7 +162,7 @@ public class GameMenu {
 
 		menuOuterFrame.setVisible(true);
 	}
-	
+
 	/**
 	 * Initialises the background of the menu frame; uses a custom JFrame which paints an image
 	 */
@@ -154,7 +174,7 @@ public class GameMenu {
 		catch(IOException e){
 			System.out.println("Could not read from image file.");
 		}
-		
+
 		// Private inner JPanel-extending class to define drawing the background image
 		class MenuBackground extends JPanel {
 			public void paintComponent(Graphics g){
@@ -163,7 +183,7 @@ public class GameMenu {
 				}
 			}
 		}
-		
+
 		// Add a new MenuBackground
 		menuOuterFrame.setContentPane(new MenuBackground());
 	}
@@ -195,6 +215,7 @@ public class GameMenu {
 
 		hiddenCheckbox.addItemListener(c);
 	}
+
 
 	/**
 	 * Handles button actions for the menu
@@ -231,6 +252,9 @@ public class GameMenu {
 	private void initialiseOptionFrame(){
 		if(optionFrame != null) return;
 
+		optionComponentBoolean = new HashMap<String, JRadioButton>();
+		optionComponentString = new HashMap<String, JTextField>();
+
 		optionFrame = new JFrame();
 		optionFrame.setSize(OPTION_WINDOW_DEFAULT_WIDTH, OPTION_WINDOW_DEFAULT_HEIGHT);
 		optionFrame.setLocation(OPTION_WINDOW_INITIAL_X, OPTION_WINDOW_INITIAL_Y);
@@ -238,51 +262,55 @@ public class GameMenu {
 		// Don't close the entire program when closing the option window!
 		optionFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-		// Grab the map of options from the file
-		Map<String, Object> optionMap = getOptions(OPTION_FILE);
+		JScrollPane optionScrollPane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		optionScrollPane.setPreferredSize(optionFrame.getPreferredSize());
+		optionFrame.add(optionScrollPane);
 
-		// Create the text area for displaying the options
-		optionTextArea = new JTextArea();
-		optionTextArea.setEditable(false);
-		// TODO editing options after displaying them
+		// Create components for:
+		// Each boolean option
+		for(Map.Entry<String, Boolean> entry : boolUserOptions.entrySet()){
+			String key = entry.getKey();
+			boolean value = entry.getValue();
 
-		// Iterate through the map and add all of the options as strings
-		for(Map.Entry<String, Object> entry : optionMap.entrySet()){
-			optionTextArea.append(entry.getKey() + ": " + entry.getValue() + "\n");
+			JRadioButton newOption = new JRadioButton(readableOptionNames.get(key));
+			newOption.setVisible(true);
+
+			optionComponentBoolean.put(key, newOption);
+			optionScrollPane.add(newOption);
 		}
 
-		optionFrame.add(optionTextArea);
 		optionFrame.setVisible(true);
 	}
 
 	/**
-	 * Sets all parameters based on the option file
+	 * Sets all parameters based options in the existing maps;
+	 * getOptions should be called before this to initialise
+	 * the maps.
 	 */
 	private void setOptionParams(){
-		Map<String, Object> options = getOptions(OPTION_FILE);
-		
-		MENU_FULLSCREEN = (boolean)options.get("MENU_FULLSCREEN");
-		
-		MAIN_WINDOW_DEFAULT_WIDTH = (int)options.get("MAIN_WINDOW_DEFAULT_WIDTH");
-		MAIN_WINDOW_DEFAULT_HEIGHT = (int)options.get("MAIN_WINDOW_DEFAULT_HEIGHT");
-		MAIN_WINDOW_INITIAL_X = (int)options.get("MAIN_WINDOW_INITIAL_X");
-		MAIN_WINDOW_INITIAL_Y = (int)options.get("MAIN_WINDOW_INITIAL_Y");
-		MAIN_WINDOW_RESIZABLE = (boolean)options.get("MAIN_WINDOW_RESIZABLE");
+		MENU_FULLSCREEN = boolOptions.get("MENU_FULLSCREEN");
 
-		OPTION_WINDOW_DEFAULT_WIDTH = (int)options.get("OPTION_WINDOW_DEFAULT_WIDTH");
-		OPTION_WINDOW_DEFAULT_HEIGHT = (int)options.get("OPTION_WINDOW_DEFAULT_HEIGHT");
-		OPTION_WINDOW_INITIAL_X = (int)options.get("OPTION_WINDOW_INITIAL_X");
-		OPTION_WINDOW_INITIAL_Y = (int)options.get("OPTION_WINDOW_INITIAL_Y");
-		OPTION_WINDOW_RESIZABLE = (boolean)options.get("OPTION_WINDOW_RESIZABLE");
+		MAIN_WINDOW_DEFAULT_WIDTH = numOptions.get("MAIN_WINDOW_DEFAULT_WIDTH");
+		MAIN_WINDOW_DEFAULT_HEIGHT = numOptions.get("MAIN_WINDOW_DEFAULT_HEIGHT");
+		MAIN_WINDOW_INITIAL_X = numOptions.get("MAIN_WINDOW_INITIAL_X");
+		MAIN_WINDOW_INITIAL_Y = numOptions.get("MAIN_WINDOW_INITIAL_Y");
+		MAIN_WINDOW_RESIZABLE = boolOptions.get("MAIN_WINDOW_RESIZABLE");
 
-		GAME_WINDOW_DEFAULT_WIDTH = (int)options.get("GAME_WINDOW_DEFAULT_WIDTH");
-		GAME_WINDOW_DEFAULT_HEIGHT = (int)options.get("GAME_WINDOW_DEFAULT_HEIGHT");
-		GAME_WINDOW_INITIAL_X = (int)options.get("GAME_WINDOW_INITIAL_X");
-		GAME_WINDOW_INITIAL_Y = (int)options.get("GAME_WINDOW_INITIAL_Y");
-		GAME_WINDOW_RESIZABLE = (boolean)options.get("GAME_WINDOW_RESIZABLE");
+		OPTION_WINDOW_DEFAULT_WIDTH = numOptions.get("OPTION_WINDOW_DEFAULT_WIDTH");
+		OPTION_WINDOW_DEFAULT_HEIGHT = numOptions.get("OPTION_WINDOW_DEFAULT_HEIGHT");
+		OPTION_WINDOW_INITIAL_X = numOptions.get("OPTION_WINDOW_INITIAL_X");
+		OPTION_WINDOW_INITIAL_Y = numOptions.get("OPTION_WINDOW_INITIAL_Y");
+		OPTION_WINDOW_RESIZABLE = boolOptions.get("OPTION_WINDOW_RESIZABLE");
 
-		GAME_KEY_1 = options.get("GAME_KEY_1").toString().charAt(0);
-		GAME_KEY_2 = options.get("GAME_KEY_2").toString().charAt(0);
+		GAME_WINDOW_DEFAULT_WIDTH = numOptions.get("GAME_WINDOW_DEFAULT_WIDTH");
+		GAME_WINDOW_DEFAULT_HEIGHT = numOptions.get("GAME_WINDOW_DEFAULT_HEIGHT");
+		GAME_WINDOW_INITIAL_X = numOptions.get("GAME_WINDOW_INITIAL_X");
+		GAME_WINDOW_INITIAL_Y = numOptions.get("GAME_WINDOW_INITIAL_Y");
+		GAME_WINDOW_RESIZABLE = boolOptions.get("GAME_WINDOW_RESIZABLE");
+
+		// For safety, rather than casting to char, just get the first character
+		GAME_KEY_1 = stringOptions.get("GAME_KEY_1").charAt(0);
+		GAME_KEY_2 = stringOptions.get("GAME_KEY_2").charAt(0);
 	}
 
 	/**
@@ -325,36 +353,61 @@ public class GameMenu {
 	}
 
 	/**
-	 * Finds and reads all options from a file
+	 * Finds and reads all options from a file. Returns a map of these as objects,
+	 * but also appends to the num(User)Options, bool(User)Options and char(User)Options maps.
+	 *
 	 * @param filename The file to read from. Throws an exception if it can't read from this file.
-	 * @return A map of options found from the file (String -> Object). 0/1 is used for boolean options.
+	 * @param isUser Whether the options being read are user options; determines which maps to write to.
+	 * @return A map of options found from the file (String -> Object).
 	 */
-	private Map<String, Object> getOptions(String filename){
+	private Map<String, Object> getOptions(String filename, boolean isUser){
 
 		// The map to return; specifically a HashMap
 		Map<String, Object> options = new HashMap<String, Object>();
+
+		// Initialise (or recreate) the maps to store all options in (as we don't want to try and put duplicates in)
+		Map<String, Integer> targetNumOptions = new HashMap<String, Integer>();
+		Map<String, Boolean> targetBoolOptions = new HashMap<String, Boolean>();
+		Map<String, String> targetStringOptions = new HashMap<String, String>();
+
+		// If we're reading user options, we also need to map the names to readable names
+		readableOptionNames = new HashMap<String, String>();
 
 		// Attempt to create a scanner
 		try{
 			// Create a new scanner on the given file
 			Scanner s = new Scanner(new File(filename));
 
+			// The user options use a different delimiter
+			if(isUser)
+				s.useDelimiter(";");
+
 			// While the scanner still has entries,
 			while(s.hasNext()){
 				// Take the next string as the option descriptor
 				String descriptor = s.next();
-				// And check to see whether the option is boolean or numerical or a string
+				// And the one after that as the readable name if applicable
+				if(isUser){
+					String readableName = s.next();
+					readableOptionNames.put(descriptor, readableName);
+				}
+				// And check to see whether the option is boolean or numerical or a string, and append it appropriately
 				Object value;
 				if(s.hasNextInt()){
-					value = s.nextInt();
+					int tempValue = s.nextInt();
+					targetNumOptions.put(descriptor, tempValue);
+					value = tempValue;
 				}
 				else if(s.hasNextBoolean()){
-					// If it's boolean, put it as a boolean
-					value = s.nextBoolean();
+					boolean tempValue = s.nextBoolean();
+					targetBoolOptions.put(descriptor, tempValue);
+					value = tempValue;
 				}
 				// If it's a string, put it as a string
 				else{
-					value = s.next();
+					String tempValue = s.next();
+					targetStringOptions.put(descriptor, tempValue);
+					value = tempValue;
 				}
 
 				options.put(descriptor, value);
@@ -365,6 +418,18 @@ public class GameMenu {
 		// Throw an exception if it can't read from the file
 		catch(IOException e){
 			System.err.println("Could not read from options file '"+filename+"'. Is this file not present? Details: " + e);
+		}
+
+		// Depending on if it was for user options or not, change the actual maps
+		if(isUser){
+			numUserOptions = targetNumOptions;
+			boolUserOptions = targetBoolOptions;
+			stringUserOptions = targetStringOptions;
+		}
+		else{
+			numOptions = targetNumOptions;
+			boolOptions = targetBoolOptions;
+			stringOptions = targetStringOptions;
 		}
 
 		return options;
