@@ -109,7 +109,7 @@ public class Game {
 				}
 			}
 		}
-		timer = new Timer(GameMenu.GAME_TICK_TIME, new InnerActionListener());
+		timer = new Timer(Options.GAME_TICK_TIME, new InnerActionListener());
 		timer.setInitialDelay(0);
 		timer.start();
 	}
@@ -120,9 +120,9 @@ public class Game {
 	private void createWindow(){
 		// Create the outer frame
 		mainFrame = new JFrame("MyOsu! Playing " + map.getName());
-		mainFrame.setSize(GameMenu.GAME_WINDOW_DEFAULT_WIDTH, GameMenu.GAME_WINDOW_DEFAULT_HEIGHT);
-		mainFrame.setLocation(GameMenu.GAME_WINDOW_INITIAL_X, GameMenu.GAME_WINDOW_INITIAL_Y);
-		mainFrame.setResizable(GameMenu.GAME_WINDOW_RESIZABLE);
+		mainFrame.setSize(Options.GAME_WINDOW_DEFAULT_WIDTH, Options.GAME_WINDOW_DEFAULT_HEIGHT);
+		mainFrame.setLocation(Options.GAME_WINDOW_INITIAL_X, Options.GAME_WINDOW_INITIAL_Y);
+		mainFrame.setResizable(Options.GAME_WINDOW_RESIZABLE);
 		mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		// Calls the terminate method when the window is closed
 		mainFrame.addWindowListener(new WindowAdapter(){
@@ -194,7 +194,7 @@ public class Game {
 	 */
 	public void doKey(KeyEvent e){
 		// If a keyevent was passed but it wasn't one of the game keys, do nothing
-		if(e.getKeyChar() != GameMenu.GAME_KEY_1 && e.getKeyChar() != GameMenu.GAME_KEY_2) return;
+		if(e.getKeyChar() != Options.GAME_KEY_1 && e.getKeyChar() != Options.GAME_KEY_2) return;
 
 		// If a key was pressed, set the 'mouse' to be down and check for elements it could be down on
 		if(e.getID() == KeyEvent.KEY_PRESSED && mouseDown == false){
