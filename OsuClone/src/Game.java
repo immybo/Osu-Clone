@@ -27,7 +27,7 @@ import javax.swing.event.MouseInputAdapter;
  *
  */
 public class Game {
-	// The minimum combo that is required to break to plxay the combo break sound
+	// The minimum combo that is required to break to play the combo break sound
 	private static final int MIN_COMBO_FOR_BREAK = 10;
 	
 	// The map that this instance of Game is using
@@ -40,9 +40,6 @@ public class Game {
 
 	// The game timer
 	private Timer timer;
-
-	// The sound player
-	private MediaPlayer audioPlayer;
 
 	// The queue of elements to be displayed
 	private Queue<Element> elements = new LinkedList<Element>();
@@ -69,6 +66,15 @@ public class Game {
 	
 	// The current combo
 	private int combo = 0;
+	
+	// The element that the player is up to on the map
+	private int currentElement = 0;
+	
+	// The accuracy of the player so far (0-100%)
+	private double accuracy = 0;
+	
+	// The number of each score which the player has gotten (300/100/50/MISS)
+	private int[] scoreCounts = { 0, 0, 0, 0 };
 
 	// The time offsets which give the player scores of: 100, 50 and MISS, respectively
 	private int[] timeOffsets;
@@ -325,12 +331,14 @@ public class Game {
 	}
 
 	/**
-	 * Removes an element checking the time offset and giving the appropriate score/hp modification
+	 * Removes an element checking the time offset and giving the appropriate score/HP/accuracy modification
 	 * @param element The element to remove
 	 * @param wasClicked If the element was clicked to remove or not (if not, it must have timed out)
 	 */
 	private void removeElement(Element element, boolean wasClicked){
 		if(element == null) { return; }
+		
+		currentElement++;
 
 		int classification = 0;
 
@@ -386,7 +394,7 @@ public class Game {
 			combo++;
 		}
 			
-		// Change score and health
+		// Change score, health and accuracy
 		processElementRemoval(classification);
 
 		// And finally, remove the element from currentelements
@@ -394,7 +402,7 @@ public class Game {
 	}
 
 	/**
-	 * Increments the score and health with the given score
+	 * Increments the score, accuracy and health with the given score
 	 * @param scoreId 3, 2, 1, 0 for 300, 100, 50 or miss
 	 */
 	private void processElementRemoval(int scoreId){
@@ -407,6 +415,11 @@ public class Game {
 
 		if(health > 100) health = 100;
 		if(health < 0) health = 0;
+		
+		// The accuracy needs to be a percent of total hits, and it's just
+		// simpler to recalculate it every time.
+		scoreCounts[scoreId]++;
+		accuracy = (double)(scoreCounts[0]*100 + scoreCounts[1]*100/3 + scoreCounts[2] * 100/6) / currentElement;
 	}
 
 	/**
@@ -435,11 +448,12 @@ public class Game {
 	}
 
 	/**
-	 * Updates the score and health for the gui
+	 * Updates the score, accuracy and health for the gui
 	 */
 	private void setGuiAttributes(){
 		guiPanel.setScore(score);
 		guiPanel.setHealth(health);
+		guiPanel.setAccuracy(accuracy);
 	}
 
 	/**
