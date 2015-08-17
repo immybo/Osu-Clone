@@ -85,9 +85,8 @@ public class Game {
 	// The slider which is currently being held down; null if none is being held down
 	private Slider activeSlider = null;
 	
-	// Audio players for the various sounds which will be used
-	private MediaPlayer audioCircleHitSound;
-	private MediaPlayer audioComboBreakSound;
+	// The volume that the music should be played at
+	private double volume = 0.5;
 
 	/**
 	 * Constructor; instantiates Game.
@@ -106,8 +105,8 @@ public class Game {
 		audioStartTime = map.getAudioStartTime();
 
 		// Begins playing the audio of the map
-		playAudio(map.getAudio());
-		initAudio();
+		AudioPlayer.init();
+		AudioPlayer.playLongAudio(map.getAudio(), audioStartTime, volume);
 
 		createWindow();
 
@@ -196,7 +195,8 @@ public class Game {
 	 * Terminates the game
 	 */
 	public void terminate(){
-		stopAudio();
+		AudioPlayer.stopLongAudio(map.getAudio());
+		AudioPlayer.terminate();
 		mainFrame.dispose();
 	}
 
@@ -356,7 +356,7 @@ public class Game {
 
 			// Play the circle hit sound if the circle was hit
 			if(classification != 3){
-				playSoundCircleHit();
+				AudioPlayer.playClip(Options.SKIN_CIRCLE_HIT_SOUND);
 			}
 		}
 
@@ -377,7 +377,7 @@ public class Game {
 		// Play the combo break sound if necessary, and break the combo if they miss
 		if(classification == 3){
 			if(combo > MIN_COMBO_FOR_BREAK)
-				playSoundComboBreak();
+				AudioPlayer.playClip(Options.SKIN_COMBO_BREAK_SOUND);
 			
 			combo = 0;
 		}
@@ -491,61 +491,6 @@ public class Game {
 	 */
 	public int getMapTime(){
 		return currentMapTime;
-	}
-
-	/**
-	 * Plays the audio that is mapped to the current map;
-	 * Does nothing if the audio file name was "null".
-	 */
-	private void playAudio(String audioFilename){
-		if(audioFilename == null) return;
-		JFXPanel panel = new JFXPanel(); // Just to initialise the class, it's a bit buggy
-		File file = new File(audioFilename);
-		Media media = new Media(file.toURI().toString());
-		audioPlayer = new MediaPlayer(media);
-		audioPlayer.setVolume(0.1);
-		audioPlayer.setStartTime(new Duration(audioStartTime));
-		audioPlayer.play();
-	}
-	
-	/**
-	 * Initialises audio files (e.g. hit sounds) that will be used
-	 */
-	private void initAudio(){
-		JFXPanel panel = new JFXPanel(); // Inits the class, it's a bit buggy
-		
-		// Grab all the files
-		File circleHitSound = new File(Options.SKIN_CIRCLE_HIT_SOUND);
-		File comboBreakSound = new File(Options.SKIN_COMBO_BREAK_SOUND);
-		
-		Media circleHitSoundMedia = new Media(circleHitSound.toURI().toString());
-		Media comboBreakSoundMedia = new Media(comboBreakSound.toURI().toString());
-		
-		audioCircleHitSound = new MediaPlayer(circleHitSoundMedia);
-		audioComboBreakSound = new MediaPlayer(comboBreakSoundMedia);
-	}
-	
-	/**
-	 * Plays the circle hit sound
-	 */
-	private void playSoundCircleHit(){
-		audioCircleHitSound.stop();
-		audioCircleHitSound.play();
-	}
-	
-	/**
-	 * Plays the combo break sound
-	 */
-	private void playSoundComboBreak(){
-		audioComboBreakSound.stop();
-		audioComboBreakSound.play();
-	}
-
-	/**
-	 * Stops the audio from being played.
-	 */
-	private void stopAudio(){
-		audioPlayer.stop();
 	}
 
 	/**
