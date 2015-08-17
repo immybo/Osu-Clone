@@ -46,6 +46,24 @@ public class Options {
 	public final static String USER_OPTION_FILE = "userOptions.txt";
 	public final static String DEFAULT_BG = "defaultbg.jpg";
 	
+	// Skin graphics
+	public final static String SKIN_HIT_0 = "skin/hit0.png";
+	public final static String SKIN_HIT_50 = "skin/hit50.png";
+	public final static String SKIN_HIT_100 = "skin/hit100.png";
+	public final static String SKIN_HIT_300 = "skin/hit300.png";
+
+	public final static String SKIN_HIT_CIRCLE = "skin/hitcircleoverlay-0.png";
+	public final static String SKIN_HIT_CIRCLE_OUTER = "skin/hitcircleselect.png";
+	public final static String SKIN_APPROACH_CIRCLE = "skin/approachcircle.png";
+	public final static String SKIN_HIT_CIRCLE_BORDER = "skin/hitcircle.png";
+	
+	// Skin sounds
+	public final static String SKIN_COMBO_BREAK_SOUND = "skin/combobreak.mp3";
+	public final static String SKIN_FAIL_SOUND = "skin/failsound.mp3";
+	public final static String SKIN_SUCCEED_SOUND = "skin/applause.mp3";
+	public final static String SKIN_CIRCLE_HIT_SOUND = "skin/normal-hitclap.wav";
+	
+	
 	// Maps options that don't need to be read by the user
 	private static Map<String, Integer> numOptions;
 	private static Map<String, Boolean> boolOptions;
@@ -175,6 +193,9 @@ public class Options {
 			while(s.hasNext()){
 				// Take the next string as the option descriptor
 				String descriptor = s.next();
+				// If there's nothing after the semicolon, there's no next element
+				if(!s.hasNext())
+					break;
 				// And the one after that as the readable name if applicable
 				if(isUser){
 					String readableName = s.next();

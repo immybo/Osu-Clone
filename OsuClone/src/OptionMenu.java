@@ -48,6 +48,7 @@ public class OptionMenu extends JFrame{
 		setSize(Options.OPTION_WINDOW_DEFAULT_WIDTH, Options.OPTION_WINDOW_DEFAULT_HEIGHT);
 		setLocation(Options.OPTION_WINDOW_INITIAL_X, Options.OPTION_WINDOW_INITIAL_Y);
 		setResizable(Options.OPTION_WINDOW_RESIZABLE);
+		setTitle("MyOsu Options");
 		setLayout(new BorderLayout());
 		// Set what to do on window close
 		addWindowListener(new WindowAdapter() {
@@ -155,10 +156,10 @@ public class OptionMenu extends JFrame{
 			// Go through every component and record their values along with string to the file
 			for(Map.Entry<String, Boolean> entry : Options.getBoolUserOptions().entrySet()){
 				// Format: NAME;readable name;value; - 1 line per option
-				userStream.print(entry.getKey() + ";" + Options.getReadableOptionNames().get(entry.getKey()) + ";" + optionComponentBoolean.get(entry.getKey()).isSelected() + ";");
+				userStream.println(entry.getKey() + ";" + Options.getReadableOptionNames().get(entry.getKey()) + ";" + optionComponentBoolean.get(entry.getKey()).isSelected() + ";");
 			}
 			for(Map.Entry<String, String> entry : Options.getStringUserOptions().entrySet()){
-				userStream.print(entry.getKey() + ";" + Options.getReadableOptionNames().get(entry.getKey()) + ";" + optionComponentString.get(entry.getKey()).getText() + ";");
+				userStream.println(entry.getKey() + ";" + Options.getReadableOptionNames().get(entry.getKey()) + ";" + optionComponentString.get(entry.getKey()).getText() + ";");
 			}
 			userStream.close();
 		}

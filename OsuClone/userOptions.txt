@@ -1,20 +1,19 @@
-TEST_OPTION;I'm an option!;true;
-TEST_OPTION2;So am I.;true;
-TEST_OPTION3;A 3rd option;true;
-TEST_OPTION_STRING9;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGb;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGc;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGa;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGf;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGg;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGd;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGe;A string option;I'm a string and I've changed;
-TEST_OPTION_STRING232;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGk;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGo;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGl;A string option;I'm a string and I've changed;
-TEST_OPTION_STRING2;A string option;I'm a string and I've changed;
-TEST_OPTION_STRING3;A string option;I'm a string and I've changed;
-TEST_OPTION_STRINGp;A string option;I'm a string and I've changed;
-TEST_OPTION_STRING;A string option;I'm a string and I've changed;
-TEST_OPTION_STRING5;A string option;I'm a string and I've changed;
+TEST_OPTION2;but I want to show off;true;
+
+
+TEST_OPTION;There aren't many options;true;
+
+
+TEST_OPTION3;the option menu....;true;
+
+
+TEST_OPTION_STRINGb;Which I think;Is a pretty good idea;
+
+
+TEST_OPTION_STRING9;A string option;They're different from boolean;
+
+
+GAME_KEY_2;Key 2;x;
+
+
+GAME_KEY_1;Key 1;c;

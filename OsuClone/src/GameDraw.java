@@ -1,6 +1,10 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -27,6 +31,12 @@ public class GameDraw extends JPanel{
 
 	// The queue of elements that should be disposed of because they have timed out
 	private Queue<Element> disposalElements = new LinkedList<Element>();
+	
+	// Images for the various elements that need to be drawn
+	private BufferedImage approachCircleImage;
+	private BufferedImage circleImage;
+	private BufferedImage outerCircleImage;
+	private BufferedImage circleBorderImage;
 
 	// The colors to draw the circles in
 	Color borderColor = Color.BLACK;
@@ -48,13 +58,29 @@ public class GameDraw extends JPanel{
 		this.game = game;
 		approachSize = this.circleSize*2;
 		previousTime = System.currentTimeMillis();
+		initImages();
+	}
+	
+	/**
+	 * Initialises the various images
+	 */
+	private void initImages(){
+		try{
+			approachCircleImage = ImageIO.read(new File(Options.SKIN_APPROACH_CIRCLE));
+			circleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE));
+			outerCircleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_OUTER));
+			circleBorderImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_BORDER));
+		}
+		catch(IOException e){
+			System.err.println("Could not read from skin image files! " + e);
+		}
 	}
 
 	@Override
 	public void paintComponent(Graphics g){
 		Graphics2D g2d = (Graphics2D)g;
 		// Clear current graphics
-		g2d.setColor(Color.WHITE);
+		g2d.setColor(Color.BLACK);
 		g2d.fillRect(0,0,this.getWidth(),this.getHeight());
 
 		// Figure out how much time has elapsed since last time
@@ -81,7 +107,6 @@ public class GameDraw extends JPanel{
 		}
 
 		previousTime = currentTime;
-
 	}
 
 	/**
@@ -99,10 +124,9 @@ public class GameDraw extends JPanel{
 		// If the approach circle would be smaller than the circle, we don't actually want to draw it, but we do want to start fading the circle out
 		if(circle.approachCircleSize > circleSize){
 			// Draw the approach circle if not
-			g2d.setColor(approachColor);
 			double approachX = circle.getX()-circleSize/2-(circle.approachCircleSize-circleSize)/2;
 			double approachY = circle.getY()-circleSize/2-(circle.approachCircleSize-circleSize)/2;
-			g2d.drawOval((int)approachX, (int)approachY, (int)circle.approachCircleSize, (int)circle.approachCircleSize);
+			g2d.drawImage(approachCircleImage, (int)approachX, (int)approachY, (int)(approachX+circle.approachCircleSize), (int)(approachY+circle.approachCircleSize), 0, 0, approachCircleImage.getWidth(this), approachCircleImage.getHeight(this), this);
 		}
 
 		// Calculate fadeout of the circle and the new color including alpha
@@ -119,7 +143,10 @@ public class GameDraw extends JPanel{
 		Color colorWithFade = new Color(fillColor.getRed(), fillColor.getBlue(), fillColor.getGreen(), 255-fade);
 
 		// Actually draw the circle
-		drawFilledCircle(g2d, circle.getX(), circle.getY(), colorWithFade, borderColor);
+		g2d.drawImage(circleBorderImage, circle.getX()-circleSize/2, circle.getY()-circleSize/2, circle.getX()+circleSize/2, circle.getY()+circleSize/2, 0, 0, circleBorderImage.getWidth(this), circleBorderImage.getHeight(this), this); 
+		g2d.drawImage(outerCircleImage, circle.getX()-circleSize, circle.getY()-circleSize, circle.getX()+circleSize, circle.getY()+circleSize, 0, 0, outerCircleImage.getWidth(this), outerCircleImage.getHeight(this), this); 
+		g2d.drawImage(circleImage, circle.getX()-circleSize/2, circle.getY()-circleSize/2, circle.getX()+circleSize/2, circle.getY()+circleSize/2, 0, 0, circleImage.getWidth(this), circleImage.getHeight(this), this);
+		
 	}
 
 	/**

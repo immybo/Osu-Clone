@@ -27,6 +27,9 @@ import javax.swing.event.MouseInputAdapter;
  *
  */
 public class Game {
+	// The minimum combo that is required to break to plxay the combo break sound
+	private static final int MIN_COMBO_FOR_BREAK = 10;
+	
 	// The map that this instance of Game is using
 	private GameMap map;
 
@@ -63,6 +66,9 @@ public class Game {
 	// The score and current health of the player
 	private int score = 0;
 	private int health = 100;
+	
+	// The current combo
+	private int combo = 0;
 
 	// The time offsets which give the player scores of: 100, 50 and MISS, respectively
 	private int[] timeOffsets;
@@ -78,6 +84,10 @@ public class Game {
 
 	// The slider which is currently being held down; null if none is being held down
 	private Slider activeSlider = null;
+	
+	// Audio players for the various sounds which will be used
+	private MediaPlayer audioCircleHitSound;
+	private MediaPlayer audioComboBreakSound;
 
 	/**
 	 * Constructor; instantiates Game.
@@ -96,7 +106,8 @@ public class Game {
 		audioStartTime = map.getAudioStartTime();
 
 		// Begins playing the audio of the map
-		//playAudio(map.getAudio());
+		playAudio(map.getAudio());
+		initAudio();
 
 		createWindow();
 
@@ -185,7 +196,7 @@ public class Game {
 	 * Terminates the game
 	 */
 	public void terminate(){
-		//stopAudio();
+		stopAudio();
 		mainFrame.dispose();
 	}
 
@@ -342,8 +353,14 @@ public class Game {
 				// If it was never clicked, then it was a miss
 				classification = 3;
 			}
+
+			// Play the circle hit sound if the circle was hit
+			if(classification != 3){
+				playSoundCircleHit();
+			}
 		}
 
+		// Figure out how many points to give for a slider
 		if(element.getElementType() == 2){
 			Slider slider = (Slider)element;
 			// Figure out the amount of points accrued for sliders
@@ -356,7 +373,19 @@ public class Game {
 			else if(slider.sliderPoints > (totalSliderTime+0.0)/20 * 0.5) classification = 2; // 50% to get 50
 			else classification = 3;
 		}
-
+		
+		// Play the combo break sound if necessary, and break the combo if they miss
+		if(classification == 3){
+			if(combo > MIN_COMBO_FOR_BREAK)
+				playSoundComboBreak();
+			
+			combo = 0;
+		}
+		// Otherwise increment the current combo
+		else{
+			combo++;
+		}
+			
 		// Change score and health
 		processElementRemoval(classification);
 
@@ -369,7 +398,11 @@ public class Game {
 	 * @param scoreId 3, 2, 1, 0 for 300, 100, 50 or miss
 	 */
 	private void processElementRemoval(int scoreId){
-		score += scores[scoreId];
+		// The formula for the score involves the combo and isn't linear;
+		// I'm not sure exactly what it is in the real game but this should
+		// be a reasonable approximation.
+		score += scores[scoreId]*(Math.pow(combo*0.1,2) + 1);
+		
 		health += healthChange[scoreId];
 
 		if(health > 100) health = 100;
@@ -466,12 +499,46 @@ public class Game {
 	 */
 	private void playAudio(String audioFilename){
 		if(audioFilename == null) return;
-		JFXPanel panel = new JFXPanel();
+		JFXPanel panel = new JFXPanel(); // Just to initialise the class, it's a bit buggy
 		File file = new File(audioFilename);
 		Media media = new Media(file.toURI().toString());
 		audioPlayer = new MediaPlayer(media);
+		audioPlayer.setVolume(0.1);
 		audioPlayer.setStartTime(new Duration(audioStartTime));
 		audioPlayer.play();
+	}
+	
+	/**
+	 * Initialises audio files (e.g. hit sounds) that will be used
+	 */
+	private void initAudio(){
+		JFXPanel panel = new JFXPanel(); // Inits the class, it's a bit buggy
+		
+		// Grab all the files
+		File circleHitSound = new File(Options.SKIN_CIRCLE_HIT_SOUND);
+		File comboBreakSound = new File(Options.SKIN_COMBO_BREAK_SOUND);
+		
+		Media circleHitSoundMedia = new Media(circleHitSound.toURI().toString());
+		Media comboBreakSoundMedia = new Media(comboBreakSound.toURI().toString());
+		
+		audioCircleHitSound = new MediaPlayer(circleHitSoundMedia);
+		audioComboBreakSound = new MediaPlayer(comboBreakSoundMedia);
+	}
+	
+	/**
+	 * Plays the circle hit sound
+	 */
+	private void playSoundCircleHit(){
+		audioCircleHitSound.stop();
+		audioCircleHitSound.play();
+	}
+	
+	/**
+	 * Plays the combo break sound
+	 */
+	private void playSoundComboBreak(){
+		audioComboBreakSound.stop();
+		audioComboBreakSound.play();
 	}
 
 	/**
