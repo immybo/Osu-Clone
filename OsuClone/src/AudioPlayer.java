@@ -68,6 +68,46 @@ public class AudioPlayer {
 	}
 	
 	/**
+	 * Pauses an audio file previously started by playLongAudio
+	 * if a filename which is currently playing is given.
+	 * 
+	 * @param fname The filename of the audio to pause.
+	 * @return Whether or not pausing the audio succeeded.
+	 */
+	public static boolean pauseLongAudio(String fname){
+		// If no filename is given, don't do anything
+		if(fname == null) return false;
+		
+		// Check to see if the audio is currently playing
+		if(currentAudio.containsKey(fname)){
+			// If it is, pause the audio
+			currentAudio.get(fname).pause();
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Resumes an audio file previously paused by pauseLongAudio
+	 * if a filename which is currently playing/paused is given.
+	 * Does nothing if the audio file is currently playing.
+	 * 
+	 * @param fname The filename of the audio to resume.
+	 */
+	public static void resumeLongAudio(String fname){
+		// If no filename is given, don't do anything
+		if(fname == null) return;
+		
+		// Check to see if the audio is currently playing or paused
+		if(currentAudio.containsKey(fname)){
+			// If it is, resume it (does nothing if paused)
+			currentAudio.get(fname).play();
+		}
+	}
+	
+	/**
 	 * Stops an audio file previously started by playLongAudio
 	 * if a filename which is currently playing is given.
 	 * 

@@ -37,6 +37,11 @@ public class Game {
 	private JFrame mainFrame;
 	private GameDraw mainPanel;
 	private GameGUI guiPanel;
+	private GamePauseMenu pauseMenu;
+	
+	private JButton resumeButton;
+	private JButton restartButton;
+	private JButton exitButton;
 
 	// The game timer
 	private Timer timer;
@@ -84,6 +89,9 @@ public class Game {
 	// The current position of the mouse
 	private int mouseX = -1;
 	private int mouseY = -1;
+	
+	private InnerMouseListener mouseListener;
+	private InnerKeyListener keyListener;
 
 	// Whether the mouse (or key) is currently being held down or not
 	private boolean mouseDown = false;
@@ -129,6 +137,43 @@ public class Game {
 		timer.setInitialDelay(0);
 		timer.start();
 	}
+	
+	/**
+	 * A mouse listener for the game; simply
+	 * calls doMouse(mouseevent) whenever 
+	 * something is done with the mouse.
+	 */
+	class InnerMouseListener extends MouseInputAdapter{
+		public void mouseClicked(MouseEvent e){
+			doMouse(e);
+		}
+		public void mouseMoved(MouseEvent e){
+			doMouse(e);
+		}
+		public void mouseDragged(MouseEvent e){
+			doMouse(e);
+		}
+		public void mouseReleased(MouseEvent e){
+			doMouse(e);
+		}
+		public void mousePressed(MouseEvent e){
+			doMouse(e);
+		}
+	}
+	
+	/**
+	 * A key listener for the game; simply
+	 * calls doKey(keyevent) whenever something
+	 * relevant is done with keys.
+	 */
+	class InnerKeyListener extends KeyAdapter{
+		public void keyPressed(KeyEvent e){
+			doKey(e);
+		}
+		public void keyReleased(KeyEvent e){
+			doKey(e);
+		}
+	}
 
 	/**
 	 * Creates the interface for the game
@@ -136,10 +181,18 @@ public class Game {
 	private void createWindow(){
 		// Create the outer frame
 		mainFrame = new JFrame("MyOsu! Playing " + map.getName());
-		mainFrame.setSize(Options.GAME_WINDOW_DEFAULT_WIDTH, Options.GAME_WINDOW_DEFAULT_HEIGHT);
-		mainFrame.setLocation(Options.GAME_WINDOW_INITIAL_X, Options.GAME_WINDOW_INITIAL_Y);
-		mainFrame.setResizable(Options.GAME_WINDOW_RESIZABLE);
+		
+		// Code for windowed
+		//mainFrame.setSize(Options.GAME_WINDOW_DEFAULT_WIDTH, Options.GAME_WINDOW_DEFAULT_HEIGHT);
+		//mainFrame.setLocation(Options.GAME_WINDOW_INITIAL_X, Options.GAME_WINDOW_INITIAL_Y);
+		//mainFrame.setResizable(Options.GAME_WINDOW_RESIZABLE);
+		
+		// Code for fullscreen
+		mainFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		mainFrame.setUndecorated(true);
+		
 		mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		
 		// Calls the terminate method when the window is closed
 		mainFrame.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
@@ -165,36 +218,10 @@ public class Game {
 		mainFrame.setVisible(true);
 
 		// Set the mouse listener on the screen
-		class InnerMouseListener extends MouseInputAdapter{
-			public void mouseClicked(MouseEvent e){
-				doMouse(e);
-			}
-			public void mouseMoved(MouseEvent e){
-				doMouse(e);
-			}
-			public void mouseDragged(MouseEvent e){
-				doMouse(e);
-			}
-			public void mouseReleased(MouseEvent e){
-				doMouse(e);
-			}
-			public void mousePressed(MouseEvent e){
-				doMouse(e);
-			}
-		}
-		mainPanel.addMouseListener(new InnerMouseListener());
-		mainPanel.addMouseMotionListener(new InnerMouseListener());
+		mainPanel.addMouseListener(mouseListener = new InnerMouseListener());
+		mainPanel.addMouseMotionListener(mouseListener);
 
-		// Set the key listener on the screen
-		class InnerKeyListener extends KeyAdapter{
-			public void keyPressed(KeyEvent e){
-				doKey(e);
-			}
-			public void keyReleased(KeyEvent e){
-				doKey(e);
-			}
-		}
-		mainPanel.addKeyListener(new InnerKeyListener());
+		mainPanel.addKeyListener(keyListener = new InnerKeyListener());
 	}
 
 	/**
@@ -210,7 +237,12 @@ public class Game {
 	 * Handles key actions
 	 */
 	public void doKey(KeyEvent e){
-		// If a keyevent was passed but it wasn't one of the game keys, do nothing
+		// If it was escape, open the pause menu
+		if(e.getKeyChar() == KeyEvent.VK_ESCAPE){
+			doPause();
+		}
+		
+		// If a keyevent was passed but it wasn't one of the game keys or the escape key, return,
 		if(e.getKeyChar() != Options.GAME_KEY_1 && e.getKeyChar() != Options.GAME_KEY_2) return;
 
 		// If a key was pressed, set the 'mouse' to be down and check for elements it could be down on
@@ -226,6 +258,83 @@ public class Game {
 				endSliderDrag();
 			}
 		}
+	}
+	
+	/**
+	 * Opens the pause menu and pauses the game
+	 */
+	private void doPause(){
+		pauseMenu = new GamePauseMenu();
+		pauseMenu.init(this);
+		mainFrame.add(pauseMenu);
+		
+		JPanel glassPane = (JPanel)mainFrame.getGlassPane();
+		resumeButton = new JButton("Resume Map");
+		restartButton = new JButton("Restart Map");
+		exitButton = new JButton("Exit to Menu");
+		
+		ActionListener l = new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				doPauseButtonAction(e);
+			}
+		};
+		
+		resumeButton.addActionListener(l);
+		restartButton.addActionListener(l);
+		exitButton.addActionListener(l);
+		
+		glassPane.add(resumeButton);
+		glassPane.add(restartButton);
+		glassPane.add(exitButton);
+		
+		glassPane.setVisible(true);
+		
+		timer.stop();
+		mainPanel.removeMouseListener(mouseListener);
+		mainPanel.removeMouseMotionListener(mouseListener);
+		mainPanel.removeKeyListener(keyListener);
+		AudioPlayer.pauseLongAudio(map.getAudio());
+	}
+	
+	/**
+	 * Performs actions from one of the pause menu buttons.
+	 */
+	private void doPauseButtonAction(ActionEvent e){
+		if(e.getSource().equals(resumeButton))
+			doUnpause();
+		else if(e.getSource().equals(restartButton)){
+			doUnpause();
+			restart();
+		}
+		else if(e.getSource().equals(exitButton)){
+			doUnpause();
+			terminate();
+		}
+	}
+	
+	/**
+	 * Resumes the game after pausing
+	 */
+	public void doUnpause(){
+		pauseMenu = null;
+
+		JPanel glassPane = (JPanel)mainFrame.getGlassPane();
+		glassPane.remove(resumeButton);
+		glassPane.remove(restartButton);
+		glassPane.remove(exitButton);
+		
+		AudioPlayer.resumeLongAudio(map.getAudio());
+		mainPanel.addMouseListener(mouseListener);
+		mainPanel.addMouseMotionListener(mouseListener);
+		mainPanel.addKeyListener(keyListener);
+		timer.start();
+	}
+	
+	/**
+	 * Restarts the map
+	 */
+	public void restart(){
+		
 	}
 
 	/**
