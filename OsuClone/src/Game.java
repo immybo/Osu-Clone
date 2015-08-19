@@ -266,28 +266,12 @@ public class Game {
 	private void doPause(){
 		pauseMenu = new GamePauseMenu();
 		pauseMenu.init(this);
-		mainFrame.add(pauseMenu);
 		
-		JPanel glassPane = (JPanel)mainFrame.getGlassPane();
-		resumeButton = new JButton("Resume Map");
-		restartButton = new JButton("Restart Map");
-		exitButton = new JButton("Exit to Menu");
+		mainFrame.remove(mainPanel);
+		mainFrame.add(pauseMenu, BorderLayout.CENTER);
 		
-		ActionListener l = new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				doPauseButtonAction(e);
-			}
-		};
-		
-		resumeButton.addActionListener(l);
-		restartButton.addActionListener(l);
-		exitButton.addActionListener(l);
-		
-		glassPane.add(resumeButton);
-		glassPane.add(restartButton);
-		glassPane.add(exitButton);
-		
-		glassPane.setVisible(true);
+		mainFrame.revalidate();
+		pauseMenu.repaint();
 		
 		timer.stop();
 		mainPanel.removeMouseListener(mouseListener);
@@ -316,12 +300,9 @@ public class Game {
 	 * Resumes the game after pausing
 	 */
 	public void doUnpause(){
-		pauseMenu = null;
-
-		JPanel glassPane = (JPanel)mainFrame.getGlassPane();
-		glassPane.remove(resumeButton);
-		glassPane.remove(restartButton);
-		glassPane.remove(exitButton);
+		mainFrame.remove(pauseMenu);
+		mainFrame.add(mainPanel, BorderLayout.CENTER);
+		mainFrame.revalidate();
 		
 		AudioPlayer.resumeLongAudio(map.getAudio());
 		mainPanel.addMouseListener(mouseListener);

@@ -60,6 +60,7 @@ public class GameMenu {/** MODS ACTIVE **/
 	 * Creates the interface for the game's selection menu
 	 */
 	private void initialiseMenu(){
+		
 		// Create the outer JFrame for the selection menu
 		menuOuterFrame = new JFrame();
 

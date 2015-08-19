@@ -1,3 +1,7 @@
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -25,6 +29,8 @@ public class GamePauseMenu extends JPanel {
 	 * @param game The instance of game to affect when buttons are pressed.
 	 */
 	public void init(Game game){
+		setPreferredSize(new Dimension(300,300));
+		
 		this.game = game;
 
 		ActionListener l = new ActionListener(){
@@ -41,11 +47,21 @@ public class GamePauseMenu extends JPanel {
 		restartButton.addActionListener(l);
 		exitButton.addActionListener(l);
 		
+		resumeButton.setLocation(300,300);
+		resumeButton.setPreferredSize(new Dimension(100,200));
+		
 		add(resumeButton);
 		add(restartButton);
 		add(exitButton);
 		
 		setVisible(true);
+	}
+	
+	@Override
+	public void paintComponent(Graphics g){
+		Graphics2D g2d = (Graphics2D)g;
+		g2d.setColor(Color.BLACK);
+		g2d.drawRect(100, 100, 1000, 1000);
 	}
 	
 	/**

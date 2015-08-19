@@ -34,14 +34,17 @@ public class AudioPlayer {
 	// A map of audio filesnames to audio streams for clips that can be played
 	private static Map<String, AudioInputStream> audioStreams;
 	
+	private static JFXPanel jfxPanel;
+	
 	/**
 	 * Initialises AudioPlayer to be used.
 	 */
 	public static void init(){
+		jfxPanel = new JFXPanel();	// To initialise the class - this freezes it for a few seconds,
+													// to which I haven't been able to find a solution.
 		currentAudio = new HashMap<String, MediaPlayer>();
 		audioClips = new HashMap<String, Clip>();
 		audioStreams = new HashMap<String, AudioInputStream>();
-		new JFXPanel(); // Just to initialise the class, it's a bit buggy
 	}
 	
 	/**
@@ -131,41 +134,6 @@ public class AudioPlayer {
 		return false;
 	}
 	
-	/*
-	/**
-	 * Initialises an audio file to be played.
-	 * This should be used for audio files that are short
-	 * and will be played a lot.
-	 * It must be called before invoking playAudioClip on
-	 * the audio file.
-	 * 
-	 * @param fname The filename of the audio to load.
-	 *
-	public static void initAudio(String fname){
-		// This is different to using a mediaplayer because it loads
-		// the entire sound clip into memory when playing.
-		File audioFile = new File(fname);
-		try{
-			AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-			AudioFormat audioFormat = audioStream.getFormat();
-			// I don't really understand what we're doing here,
-			// But it has something to do with that Java doesn't
-			// natively support mp3 and we're using mp3spi...
-			AudioFormat decodedFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, audioFormat.getSampleRate(),16,audioFormat.getChannels(),audioFormat.getChannels()*2,audioFormat.getSampleRate(),false);
-			
-			DataLine.Info audioInfo = new DataLine.Info(Clip.class, decodedFormat);
-			Clip audioClip = (Clip) AudioSystem.getLine(audioInfo);
-			
-			audioClips.put(fname, audioClip);
-			audioStreams.put(fname, audioStream);
-		}
-		catch(Exception e){
-			e.printStackTrace();
-			System.err.println("Couldn't load from audio file! " + e);
-		}
-	}
-	*/
-	
 	/**
 	 * Allows AudioPlayer to stop audio when necessary
 	 */
@@ -187,7 +155,8 @@ public class AudioPlayer {
 	}
 	
 	/**
-	 * We need a constructor to create our own version of LineListener
+	 * We need a constructor to create our own version of LineListener,
+	 * since it isn't static...
 	 */
 	private AudioPlayer(){}
 	
@@ -205,6 +174,13 @@ public class AudioPlayer {
 		
 		// Unfortunately, we have to reset the clip every time so that we can get an open line.
 		// Or something like that, I don't really understand this audio process.
+		
+		// If the clip is already running, we want to stop it and play the new one
+		if(audioClips.containsKey(fname)){
+			audioClips.get(fname).stop();
+			audioClips.get(fname).close();
+		}
+		
 		Clip clip = null;
 		AudioInputStream inputStream = null;
 		try{
@@ -217,6 +193,9 @@ public class AudioPlayer {
 			
 			DataLine.Info audioInfo = new DataLine.Info(Clip.class, decodedFormat);
 			clip = (Clip) AudioSystem.getLine(audioInfo);
+			
+			audioClips.put(fname, clip);
+			audioStreams.put(fname, inputStream);
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -224,11 +203,6 @@ public class AudioPlayer {
 		}
 		
 		try{
-			// If the clip is already running, we want to stop it and play the new one
-			if(clip.isOpen()){
-				clip.stop();
-				clip.close();
-			}
 			
 			clip.open(inputStream);
 			clip.start();
