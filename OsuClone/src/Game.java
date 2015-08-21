@@ -277,23 +277,7 @@ public class Game {
 		mainPanel.removeMouseListener(mouseListener);
 		mainPanel.removeMouseMotionListener(mouseListener);
 		mainPanel.removeKeyListener(keyListener);
-		AudioPlayer.pauseLongAudio(map.getAudio());
-	}
-	
-	/**
-	 * Performs actions from one of the pause menu buttons.
-	 */
-	private void doPauseButtonAction(ActionEvent e){
-		if(e.getSource().equals(resumeButton))
-			doUnpause();
-		else if(e.getSource().equals(restartButton)){
-			doUnpause();
-			restart();
-		}
-		else if(e.getSource().equals(exitButton)){
-			doUnpause();
-			terminate();
-		}
+		AudioPlayer.pauseLongAudio();
 	}
 	
 	/**
@@ -304,7 +288,7 @@ public class Game {
 		mainFrame.add(mainPanel, BorderLayout.CENTER);
 		mainFrame.revalidate();
 		
-		AudioPlayer.resumeLongAudio(map.getAudio());
+		AudioPlayer.resumeLongAudio();
 		mainPanel.addMouseListener(mouseListener);
 		mainPanel.addMouseMotionListener(mouseListener);
 		mainPanel.addKeyListener(keyListener);
