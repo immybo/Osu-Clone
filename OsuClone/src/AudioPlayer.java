@@ -1,6 +1,4 @@
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;

@@ -7,16 +7,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.List;
-
-import javafx.scene.media.*;
-import javafx.util.Duration;
-import javafx.embed.swing.*;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
@@ -38,10 +33,6 @@ public class Game {
 	private GameDraw mainPanel;
 	private GameGUI guiPanel;
 	private GamePauseMenu pauseMenu;
-	
-	private JButton resumeButton;
-	private JButton restartButton;
-	private JButton exitButton;
 
 	// The game timer
 	private Timer timer;
@@ -101,6 +92,11 @@ public class Game {
 	
 	// The volume that the music should be played at
 	private double volume = 0.5;
+	
+	// The amount of time which the map has been paused for
+	private double pauseDelay = 0;
+	// The start time of pausing
+	private long pauseStartTime;
 
 	/**
 	 * Constructor; instantiates Game.
@@ -264,6 +260,9 @@ public class Game {
 	 * Opens the pause menu and pauses the game
 	 */
 	private void doPause(){
+		pauseStartTime = System.currentTimeMillis();
+
+		// Swap the graphics around
 		pauseMenu = new GamePauseMenu();
 		pauseMenu.init(this);
 		
@@ -273,6 +272,7 @@ public class Game {
 		mainFrame.revalidate();
 		pauseMenu.repaint();
 		
+		// Stop the timer, remove the listeners and pause the audio
 		timer.stop();
 		mainPanel.removeMouseListener(mouseListener);
 		mainPanel.removeMouseMotionListener(mouseListener);
@@ -284,10 +284,15 @@ public class Game {
 	 * Resumes the game after pausing
 	 */
 	public void doUnpause(){
+		// Change the total time spent paused so that we know where we're up to in the map
+		pauseDelay += System.currentTimeMillis() - pauseStartTime;
+		
+		// Swap the graphics around
 		mainFrame.remove(pauseMenu);
 		mainFrame.add(mainPanel, BorderLayout.CENTER);
 		mainFrame.revalidate();
 		
+		// Resume the audio, listeners and timer
 		AudioPlayer.resumeLongAudio();
 		mainPanel.addMouseListener(mouseListener);
 		mainPanel.addMouseMotionListener(mouseListener);
@@ -501,7 +506,7 @@ public class Game {
 	 */
 	private void doGame(){
 		// Evaluate the new time
-		currentMapTime = (int)(System.currentTimeMillis()-mapStartTime);
+		currentMapTime = (int)(System.currentTimeMillis()-pauseDelay-mapStartTime);
 
 		// Update the active slider
 		if(mouseDown) changeActiveSliderPoints();

@@ -10,7 +10,8 @@ import java.awt.event.*;
  * The selection menu of the game.
  * @author campberobe1
  */
-public class GameMenu {/** MODS ACTIVE **/
+public class GameMenu {
+	/** MODS ACTIVE **/
 	private boolean isHidden = false;
 
 	/** JCOMPONENTS **/
@@ -20,12 +21,6 @@ public class GameMenu {/** MODS ACTIVE **/
 	private JPanel rightPanel;
 
 	private OptionMenu optionFrame;
-	private JPanel optionPanel;
-	private JScrollPane optionScrollPane;
-
-	// All components which are mapped to user options
-	private Map<String, JRadioButton> optionComponentBoolean;
-	private Map<String, JTextField> optionComponentString;
 
 	private JButton optionButton;
 
@@ -135,7 +130,8 @@ public class GameMenu {/** MODS ACTIVE **/
 		}
 
 		// Add a new MenuBackground
-		menuOuterFrame.setContentPane(backgroundPanel = new MenuBackground());
+		backgroundPanel = new MenuBackground();
+		menuOuterFrame.setContentPane(backgroundPanel);
 	}
 
 	/**

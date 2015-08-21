@@ -84,7 +84,7 @@ public class GameDraw extends JPanel{
 		g2d.fillRect(0,0,this.getWidth(),this.getHeight());
 
 		// Figure out how much time has elapsed since last time
-		long currentTime = System.currentTimeMillis();
+		long currentTime = game.getCurrentMapTime();
 		long dT = currentTime - previousTime;
 
 		// Draw every circle and its approach circle
@@ -128,19 +128,8 @@ public class GameDraw extends JPanel{
 			double approachY = circle.getY()-circleSize/2-(circle.approachCircleSize-circleSize)/2;
 			g2d.drawImage(approachCircleImage, (int)approachX, (int)approachY, (int)(approachX+circle.approachCircleSize), (int)(approachY+circle.approachCircleSize), 0, 0, approachCircleImage.getWidth(this), approachCircleImage.getHeight(this), this);
 		}
-
-		// Calculate fadeout of the circle and the new color including alpha
-		int fade = 0;
-		if(circle.approachCircleSize < circleSize){
-			fade = (int)(255 * ((double)(game.getMapTime()-circle.getTime())/accuracy));
-			if(fade < 0){
-				fade = 0;
-			}
-			else if(fade > 255){
-				fade = 255;
-			}
-		}
-		Color colorWithFade = new Color(fillColor.getRed(), fillColor.getBlue(), fillColor.getGreen(), 255-fade);
+		
+		// TODO circle fadeout over time
 
 		// Actually draw the circle
 		g2d.drawImage(circleBorderImage, circle.getX()-circleSize/2, circle.getY()-circleSize/2, circle.getX()+circleSize/2, circle.getY()+circleSize/2, 0, 0, circleBorderImage.getWidth(this), circleBorderImage.getHeight(this), this); 

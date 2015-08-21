@@ -6,8 +6,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.imageio.ImageIO;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * A pause menu for the game of MyOsu; is merely a panel that should
@@ -23,6 +28,8 @@ public class GamePauseMenu extends JPanel {
 	private JButton resumeButton;
 	private JButton restartButton;
 	private JButton exitButton;
+	
+	private BufferedImage backgroundImage;
 	
 	/**
 	 * Initialises the pause menu.
@@ -47,12 +54,13 @@ public class GamePauseMenu extends JPanel {
 		restartButton.addActionListener(l);
 		exitButton.addActionListener(l);
 		
-		resumeButton.setLocation(300,300);
-		resumeButton.setPreferredSize(new Dimension(100,200));
-		
 		add(resumeButton);
 		add(restartButton);
 		add(exitButton);
+		
+		// Initialise the background
+		try{ backgroundImage = ImageIO.read(new File(Options.SKIN_PAUSE_MENU_BACKGROUND)); }
+		catch(IOException e){ System.out.println(e); }
 		
 		setVisible(true);
 	}
@@ -60,8 +68,7 @@ public class GamePauseMenu extends JPanel {
 	@Override
 	public void paintComponent(Graphics g){
 		Graphics2D g2d = (Graphics2D)g;
-		g2d.setColor(Color.BLACK);
-		g2d.drawRect(100, 100, 1000, 1000);
+		g2d.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
 	}
 	
 	/**

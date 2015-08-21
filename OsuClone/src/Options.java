@@ -57,6 +57,8 @@ public class Options {
 	public final static String SKIN_APPROACH_CIRCLE = "skin/approachcircle.png";
 	public final static String SKIN_HIT_CIRCLE_BORDER = "skin/hitcircle.png";
 	
+	public final static String SKIN_PAUSE_MENU_BACKGROUND = "skin/pausebackground.png";
+	
 	// Skin sounds
 	public final static String SKIN_COMBO_BREAK_SOUND = "skin/combobreak.mp3";
 	public final static String SKIN_FAIL_SOUND = "skin/failsound.mp3";
