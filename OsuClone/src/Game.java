@@ -24,6 +24,8 @@ import javax.swing.event.MouseInputAdapter;
 public class Game {
 	// The minimum combo that is required to break to play the combo break sound
 	private static final int MIN_COMBO_FOR_BREAK = 10;
+	// The loss of health per tick
+	private static final double HEALTH_LOSS = 0.1;
 	
 	// The map that this instance of Game is using
 	private GameMap map;
@@ -57,7 +59,7 @@ public class Game {
 
 	// The score and current health of the player
 	private int score = 0;
-	private int health = 100;
+	private double health = 100;
 	
 	// The current combo
 	private int combo = 0;
@@ -74,7 +76,7 @@ public class Game {
 	// The time offsets which give the player scores of: 100, 50 and MISS, respectively
 	private int[] timeOffsets;
 	private int[] scores = { 300, 100, 50, 0 };
-	private int[] healthChange = { 10, -5, -10, -20 };
+	private int[] healthChange = { 10, 0, -7, -14 };
 
 	// The current position of the mouse
 	private int mouseX = -1;
@@ -519,10 +521,12 @@ public class Game {
 
 		// Update the gui attributes
 		setGuiAttributes();
+		
+		// Reduce the remaining health
+		health -= HEALTH_LOSS;
 
 		// Render
 		mainPanel.repaint();
-		//guiPanel.repaint();
 	}
 
 	/**

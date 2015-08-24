@@ -27,7 +27,7 @@ public class GameDraw extends JPanel{
 	// The current score and health of the player;
 	// These are accurate only to the last call of setScore/setHealth
 	private int score = 0;
-	private int health = 100;
+	private double health = 100;
 	// The accuracy which the player currently has; different to accuracy above
 	private double currentAccuracy = 0;
 
@@ -44,6 +44,14 @@ public class GameDraw extends JPanel{
 	private BufferedImage circleImage;
 	private BufferedImage outerCircleImage;
 	private BufferedImage circleBorderImage;
+	
+	private BufferedImage[] numberImage;
+	private BufferedImage dotImage;
+	private BufferedImage percentImage;
+	
+	private BufferedImage healthBarImage3;
+	private BufferedImage healthBarImage2;
+	private BufferedImage healthBarImage1;
 
 	// The colors to draw the circles in
 	Color borderColor = Color.BLACK;
@@ -77,6 +85,19 @@ public class GameDraw extends JPanel{
 			circleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE));
 			outerCircleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_OUTER));
 			circleBorderImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_BORDER));
+			
+			dotImage = ImageIO.read(new File(Options.SKIN_DOT));
+			percentImage = ImageIO.read(new File(Options.SKIN_PERCENT));
+			
+			healthBarImage3 = ImageIO.read(new File(Options.SKIN_HEALTHBAR_3));
+			healthBarImage2 = ImageIO.read(new File(Options.SKIN_HEALTHBAR_2));
+			healthBarImage1 = ImageIO.read(new File(Options.SKIN_HEALTHBAR_1));
+			
+			numberImage = new BufferedImage[10];
+			for(int i = 0; i < 10; i++){
+				numberImage[i] = ImageIO.read(new File(Options.SKIN_NUMBER_BASE + i + Options.SKIN_NUMBER_END));
+			}
+			
 		}
 		catch(IOException e){
 			System.err.println("Could not read from skin image files! " + e);
@@ -120,18 +141,49 @@ public class GameDraw extends JPanel{
 
 	public void drawGUI(Graphics2D g2d){
 		// Draw the score
-		g2d.setColor(Color.WHITE);
-		g2d.drawString("Score: " + score, 400, 30);
+		String strScore = Integer.toString(score);
+		// Start at the right
+		int scoreYOffset = 15;
+		int scoreXOffset = 15;
+		int currentX = this.getWidth()-scoreXOffset;
+		for(int i = strScore.length()-1; i >= 0; i--){
+			// Well, it turns out that getting an integer value for one place in an integer
+			// isn't that simple. First, we get the appropriate character from the string,
+			// then get the toString of that, and finally parse that string as an int...
+			BufferedImage img = numberImage[Integer.parseInt(((Character)(strScore.charAt(i))).toString())];
+			g2d.drawImage(img, currentX-img.getWidth(), scoreYOffset, currentX, scoreYOffset+img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), this);
+			currentX -= img.getWidth()+5;
+		}
+		
 		// Draw the health
-		g2d.setColor(new Color((int)(2.5*health),0,0));
-		g2d.fillRect(110, 10, health*2, 50);
-		g2d.setColor(Color.WHITE);
-		g2d.drawRect(110, 10, 200, 50);
-		g2d.drawString("Health: ", 30, 30);
+		
+		{
+		BufferedImage img;
+		if(health >= 70) img = healthBarImage3;
+		else if(health >= 40) img = healthBarImage2;
+		else img = healthBarImage1;
+		
+		g2d.drawImage(img, 0, 0, (int)(health*12), img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), this);
+		}
+		
 		// Draw the accuracy
-		g2d.setColor(Color.WHITE);
-		String accString = String.format("Accuracy: %.2f",currentAccuracy); accString += "%";
-		g2d.drawString(accString, 800, 30);
+		String strAcc = String.format("%.2f",currentAccuracy);
+		int accYOffset = 80;
+		int accXOffset = 15;
+		currentX = this.getWidth()-accXOffset;
+		
+		// Draw a percent sign at the end
+		g2d.drawImage(percentImage, currentX-percentImage.getWidth()/2, accYOffset, currentX, accYOffset+percentImage.getHeight()/2, 0, 0, percentImage.getWidth(), percentImage.getHeight(), this);
+		currentX -= percentImage.getWidth()/2 + 5;
+		for(int i = strAcc.length()-1; i >= 0; i--){
+			BufferedImage img;
+			// If it's a dot, obviously we can't parse it as an int
+			if(strAcc.charAt(i) == '.') img = dotImage;
+			else img = numberImage[Integer.parseInt(((Character)(strAcc.charAt(i))).toString())];
+			
+			g2d.drawImage(img, currentX-img.getWidth()/2, accYOffset, currentX, accYOffset+img.getHeight()/2, 0, 0, img.getWidth(), img.getHeight(), this);
+			currentX -= img.getWidth()/2 + 5;
+		}
 	}
 
 	/**
@@ -144,7 +196,7 @@ public class GameDraw extends JPanel{
 	/**
 	 * Sets the health to draw
 	 */
-	public void setHealth(int health){
+	public void setHealth(double health){
 		this.health = health;
 	}
 	

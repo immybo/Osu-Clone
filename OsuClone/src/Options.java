@@ -59,6 +59,15 @@ public class Options {
 	
 	public final static String SKIN_PAUSE_MENU_BACKGROUND = "skin/pausebackground.png";
 	
+	public final static String SKIN_NUMBER_BASE = "skin/score-";
+	public final static String SKIN_NUMBER_END = ".png";
+	public final static String SKIN_DOT = "skin/score-dot.png";
+	public final static String SKIN_PERCENT = "skin/score-percent.png";
+	
+	public final static String SKIN_HEALTHBAR_3 = "skin/scorebar-ki.png";
+	public final static String SKIN_HEALTHBAR_2 = "skin/scorebar-kidanger.png";
+	public final static String SKIN_HEALTHBAR_1 = "skin/scorebar-kidanger2.png";
+	
 	// Skin sounds
 	public final static String SKIN_COMBO_BREAK_SOUND = "skin/combobreak.mp3";
 	public final static String SKIN_FAIL_SOUND = "skin/failsound.mp3";
