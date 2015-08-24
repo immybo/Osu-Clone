@@ -23,6 +23,13 @@ public class GameDraw extends JPanel{
 	private int approachSize;
 	// The accuracy (in ms) required before the circle disappears
 	private int accuracy;
+	
+	// The current score and health of the player;
+	// These are accurate only to the last call of setScore/setHealth
+	private int score = 0;
+	private int health = 100;
+	// The accuracy which the player currently has; different to accuracy above
+	private double currentAccuracy = 0;
 
 	// The list of circles to be drawn
 	private java.util.List<Circle> circles = new ArrayList<Circle>();
@@ -106,7 +113,46 @@ public class GameDraw extends JPanel{
 			drawSliderElement(g2d, next, dT);
 		}
 
+		drawGUI(g2d);
+		
 		previousTime = currentTime;
+	}
+
+	public void drawGUI(Graphics2D g2d){
+		// Draw the score
+		g2d.setColor(Color.WHITE);
+		g2d.drawString("Score: " + score, 400, 30);
+		// Draw the health
+		g2d.setColor(new Color((int)(2.5*health),0,0));
+		g2d.fillRect(110, 10, health*2, 50);
+		g2d.setColor(Color.WHITE);
+		g2d.drawRect(110, 10, 200, 50);
+		g2d.drawString("Health: ", 30, 30);
+		// Draw the accuracy
+		g2d.setColor(Color.WHITE);
+		String accString = String.format("Accuracy: %.2f",currentAccuracy); accString += "%";
+		g2d.drawString(accString, 800, 30);
+	}
+
+	/**
+	 * Sets the score to draw
+	 */
+	public void setScore(int score){
+		this.score = score;
+	}
+
+	/**
+	 * Sets the health to draw
+	 */
+	public void setHealth(int health){
+		this.health = health;
+	}
+	
+	/**
+	 * Sets the accuracy to draw
+	 */
+	public void setAccuracy(double currentAccuracy){
+		this.currentAccuracy = currentAccuracy;
 	}
 
 	/**

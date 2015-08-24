@@ -28,14 +28,6 @@ public class AudioPlayer {
 	private static Clip currentClip = null;
 	
 	/**
-	 * Initialises AudioPlayer to be used.
-	 */
-	public static void init(){
-		new JFXPanel();	// To initialise the class - this sometimes freezes it for a few seconds,
-						// to which I haven't been able to find a solution.
-	}
-	
-	/**
 	 * Plays an audio file until stopLongAudio(fname) is called.
 	 * Should be used only for long audio files.
 	 * 
@@ -43,7 +35,7 @@ public class AudioPlayer {
 	 * @param startTime The time within the audio file to start at (ms).
 	 * @param volume The volume of the audio; 0.5 is a reasonable volume.
 	 */
-	public static void playLongAudio(String fname, int startTime, double volume){
+	public static void playLongAudio(String fname, int startTime, double volume, Game game){
 		// If no filename is given, don't do anything...
 		if(fname == null) return;
 		
@@ -61,6 +53,8 @@ public class AudioPlayer {
 		audioPlayer.setVolume(0.1);
 		audioPlayer.setStartTime(new Duration(startTime));
 		audioPlayer.play();
+		
+		game.audioInitialised = true;
 	}
 	
 	/**

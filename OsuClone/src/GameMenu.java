@@ -1,6 +1,8 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import javafx.embed.swing.JFXPanel;
+
 import java.io.*;
 import java.util.*;
 import java.awt.*;
@@ -49,6 +51,8 @@ public class GameMenu {
 		Options.init();
 		initialiseMenu();
 		initialiseButtons();
+		new JFXPanel();	// To initialise the class - this sometimes freezes it for a few seconds,
+		// to which I haven't been able to find a solution.
 	}
 
 	/**
