@@ -6,17 +6,15 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
 
-import javafx.embed.swing.JFXPanel;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
 /**
- * Handles playing all sounds for MyOsu, including
- * - Music
- * - Game sounds e.g. hit sounds
- * 
- * Call init() before trying to use any sounds.
+ * Handles playing all sounds for MyOsu, statically.
+ * Due to technical constraints, only one clip and
+ * one media player (long audio) may be played at
+ * any given time.
  * 
  * @author Robert Campbell
  */

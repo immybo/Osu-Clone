@@ -19,7 +19,6 @@ import javax.swing.event.MouseInputAdapter;
 /**
  * A map which is being played
  * @author campberobe1
- *
  */
 public class Game {
 	// The minimum combo that is required to break to play the combo break sound
@@ -74,6 +73,8 @@ public class Game {
 	private int[] scoreCounts = { 0, 0, 0, 0 };
 
 	// The time offsets which give the player scores of: 100, 50 and MISS, respectively
+	// Set at the start based off the map's health value, with these as the defaults
+	// Changing these will change all health losses in the same ratio for all maps
 	private int[] timeOffsets;
 	private int[] scores = { 300, 100, 50, 0 };
 	private int[] healthChange = { 10, 0, -7, -14 };
@@ -108,12 +109,20 @@ public class Game {
 	 */
 	public Game(GameMap map){
 		this.map = map;
+		map.resetQueue();
 
 		currentMapTime = 0;
 
 		timeOffsets = map.getOD();
 		approachTime = map.getAR();
 		circleSize = map.getCS();
+		
+		healthChange[3] /= map.getHealth();
+		healthChange[2] /= map.getHealth();
+		healthChange[1] /= map.getHealth();
+		// Negative ones (1,2,3) increase loss as health gets higher level (lower)
+		// Positive one (hit) decrease gain as health gets higher level
+		healthChange[0] *= map.getHealth();
 
 		audioStartTime = map.getAudioStartTime();
 		
@@ -218,7 +227,8 @@ public class Game {
 		mainPanel.addMouseListener(mouseListener = new InnerMouseListener());
 		mainPanel.addMouseMotionListener(mouseListener);
 
-		mainPanel.addKeyListener(keyListener = new InnerKeyListener());
+		keyListener = new InnerKeyListener();
+		mainPanel.addKeyListener(keyListener);
 	}
 
 	/**
@@ -228,6 +238,7 @@ public class Game {
 		AudioPlayer.stopLongAudio(map.getAudio());
 		AudioPlayer.terminate();
 		mainFrame.dispose();
+		timer.stop();
 	}
 
 	/**
@@ -261,7 +272,6 @@ public class Game {
 	 * Opens the pause menu and pauses the game
 	 */
 	private void doPause(){
-		pauseStartTime = System.currentTimeMillis();
 
 		// Swap the graphics around
 		pauseMenu = new GamePauseMenu();
@@ -275,6 +285,7 @@ public class Game {
 		pauseMenu.repaint();
 		
 		// Stop the timer, remove the listeners and pause the audio
+		pauseStartTime = System.currentTimeMillis();
 		timer.stop();
 		mainPanel.removeMouseListener(mouseListener);
 		mainPanel.removeMouseMotionListener(mouseListener);
@@ -286,8 +297,6 @@ public class Game {
 	 * Resumes the game after pausing
 	 */
 	public void doUnpause(){
-		// Change the total time spent paused so that we know where we're up to in the map
-		pauseDelay += System.currentTimeMillis() - pauseStartTime;
 		
 		// Swap the graphics around
 		mainFrame.remove(pauseMenu);
@@ -300,6 +309,10 @@ public class Game {
 		mainPanel.addMouseListener(mouseListener);
 		mainPanel.addMouseMotionListener(mouseListener);
 		mainPanel.addKeyListener(keyListener);
+		mainPanel.requestFocus();
+		
+		// Change the total time spent paused so that we know where we're up to in the map
+		pauseDelay += System.currentTimeMillis() - pauseStartTime;
 		timer.start();
 	}
 	
@@ -307,7 +320,8 @@ public class Game {
 	 * Restarts the map
 	 */
 	public void restart(){
-		
+		terminate();
+		new Game(map);
 	}
 
 	/**
@@ -428,7 +442,7 @@ public class Game {
 		if(element.getElementType() == 1){
 			// Figure out the time offset for circles
 			int supposedTime = element.getTime();
-			long timeOffset = Math.abs(System.currentTimeMillis() - mapStartTime - supposedTime);
+			long timeOffset = Math.abs(currentMapTime - supposedTime);
 
 			if(wasClicked){
 				if(timeOffset < timeOffsets[0]) classification = 0;
@@ -523,7 +537,7 @@ public class Game {
 		setGuiAttributes();
 		
 		// Reduce the remaining health
-		health -= HEALTH_LOSS;
+		health -= HEALTH_LOSS/map.getHealth();
 
 		// Render
 		mainPanel.repaint();

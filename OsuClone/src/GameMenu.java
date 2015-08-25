@@ -59,7 +59,6 @@ public class GameMenu {
 	 * Creates the interface for the game's selection menu
 	 */
 	private void initialiseMenu(){
-		
 		// Create the outer JFrame for the selection menu
 		menuOuterFrame = new JFrame();
 
@@ -178,10 +177,18 @@ public class GameMenu {
 		}
 
 		if(mapButton.contains(source)){
-			if(currentGame != null) currentGame.terminate();
-			GameMap newGameMap = getMap(mapList.get(source));
-			currentGame = new Game(newGameMap);
+			buildGame(getMap(mapList.get(source)));
 		}
+	}
+	
+	/**
+	 * Closes any current game instance and
+	 * creates a new one from the specified
+	 * GameMap
+	 */
+	private void buildGame(GameMap map){
+		if(currentGame != null) currentGame.terminate();
+		currentGame = new Game(map);
 	}
 
 	/**

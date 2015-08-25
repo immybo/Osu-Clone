@@ -2,6 +2,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +11,6 @@ import java.util.*;
 /**
  * Handles drawing for a game of MyOsu!
  * @author campberobe1
- *
  */
 public class GameDraw extends JPanel{
 	// The instance of game that this is drawing for
@@ -44,6 +44,7 @@ public class GameDraw extends JPanel{
 	private BufferedImage circleImage;
 	private BufferedImage outerCircleImage;
 	private BufferedImage circleBorderImage;
+	private BufferedImage sliderFollowCircleImage;
 	
 	private BufferedImage[] numberImage;
 	private BufferedImage dotImage;
@@ -85,6 +86,8 @@ public class GameDraw extends JPanel{
 			circleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE));
 			outerCircleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_OUTER));
 			circleBorderImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_BORDER));
+			
+			sliderFollowCircleImage = ImageIO.read(new File(Options.SKIN_SLIDER_FOLLOW_CIRCLE));
 			
 			dotImage = ImageIO.read(new File(Options.SKIN_DOT));
 			percentImage = ImageIO.read(new File(Options.SKIN_PERCENT));
@@ -156,14 +159,13 @@ public class GameDraw extends JPanel{
 		}
 		
 		// Draw the health
-		
 		{
-		BufferedImage img;
-		if(health >= 70) img = healthBarImage3;
-		else if(health >= 40) img = healthBarImage2;
-		else img = healthBarImage1;
+			BufferedImage img;
+			if(health >= 70) img = healthBarImage3;
+			else if(health >= 40) img = healthBarImage2;
+			else img = healthBarImage1;
 		
-		g2d.drawImage(img, 0, 0, (int)(health*12), img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), this);
+			g2d.drawImage(img, 0, 0, (int)(health*12), img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), this);
 		}
 		
 		// Draw the accuracy
@@ -247,39 +249,27 @@ public class GameDraw extends JPanel{
 			return;
 		}
 
-		g2d.setColor(sliderColor);
-		// Draw a diagram to understand these points
-		// Depends on the angle of the slider, so we can't just use drawRectangle
-		int x1 = (int)(slider.getX() - Math.sin(slider.getAngle())*(circleSize/2));
-		int x2 = (int)(slider.getX() + Math.sin(slider.getAngle())*(circleSize/2));
-		int x3 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) + Math.sin(slider.getAngle())*(circleSize/2));
-		int x4 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) - Math.sin(slider.getAngle())*(circleSize/2));
-
-		int y1 = (int)(slider.getY() + Math.cos(slider.getAngle())*(circleSize/2));
-		int y2 = (int)(slider.getY() - Math.cos(slider.getAngle())*(circleSize/2));
-		int y3 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) - Math.cos(slider.getAngle())*(circleSize/2));
-		int y4 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) + Math.cos(slider.getAngle())*(circleSize/2));
-
-		int[] xPos = {x1, x2, x3, x4};
-		int[] yPos = {y1, y2, y3, y4};
-
-		// Draw a rectangle for the slider body
-		g2d.fillPolygon(xPos, yPos, 4);
-
-		// And two circles for either end of the slider
-		drawFilledCircle(g2d, slider.getX(), slider.getY(), sliderEndColor, Color.BLACK);
-		drawFilledCircle(g2d, slider.getX() + (int)(Math.cos(slider.getAngle())*slider.getLength()), slider.getY() + (int)(Math.sin(slider.getAngle())*slider.getLength()), sliderEndColor, Color.BLACK);
+		AffineTransform transformer = new AffineTransform();
+		// Move it to the correct position
+		transformer.translate(slider.getX(), slider.getY());
+		// Since we're already using an AffineTransform for rotation, scale it in the same way
+		transformer.scale(slider.getLength()/circleImage.getWidth(), 1);
+		// And rotate it appropriately
+		transformer.rotate(slider.getAngle()*360/Math.PI/2);
+		
+		g2d.drawImage(circleImage, transformer, this);
 
 		// Check if the slider has started yet;
 		// If so, draw a follow circle
 		if(game.getCurrentMapTime() > slider.getTime()){
 			// Increment the follow circle position
 			slider.followCirclePos += (slider.getLength()+0.0)/(slider.getEndTime()-slider.getTime())*dT;
-			// Draw the follow circle
+			
 			int followX = (int)(slider.getX() + Math.cos(slider.getAngle())*slider.followCirclePos);
 			int followY = (int)(slider.getY() + Math.sin(slider.getAngle())*slider.followCirclePos);
-
-			drawFilledCircle(g2d, followX, followY, followCircleColor, Color.BLACK);
+			
+			// Draw the follow circle
+			g2d.drawImage(sliderFollowCircleImage, followX, followY, followX+circleSize, followY+circleSize, 0, 0, sliderFollowCircleImage.getWidth(), sliderFollowCircleImage.getHeight(), this);
 		}
 		// If not, draw an approach circle
 		else{

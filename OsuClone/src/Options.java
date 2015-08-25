@@ -68,6 +68,8 @@ public class Options {
 	public final static String SKIN_HEALTHBAR_2 = "skin/scorebar-kidanger.png";
 	public final static String SKIN_HEALTHBAR_1 = "skin/scorebar-kidanger2.png";
 	
+	public final static String SKIN_SLIDER_FOLLOW_CIRCLE = "skin/sliderfollowcircle.png";
+	
 	// Skin sounds
 	public final static String SKIN_COMBO_BREAK_SOUND = "skin/combobreak.mp3";
 	public final static String SKIN_FAIL_SOUND = "skin/failsound.mp3";
