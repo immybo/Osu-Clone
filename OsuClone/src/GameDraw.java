@@ -42,7 +42,7 @@ public class GameDraw extends JPanel{
 	Color borderColor = Color.BLACK;
 	Color fillColor = Color.RED;
 	Color approachColor = Color.BLUE;
-	Color sliderColor = Color.GREEN;
+	Color sliderColor = new Color(240, 240, 240, 100);
 	Color sliderEndColor = Color.CYAN;
 	Color followCircleColor = Color.GRAY;
 
@@ -110,7 +110,7 @@ public class GameDraw extends JPanel{
 	}
 
 	/**
-	 * Draws a circle along with its approach circle
+	 * Draws a circle element along with its approach circle
 	 */
 	private void drawCircleElement(Graphics2D g2d, Circle circle){
 		// Check if the circle is supposed to disappear
@@ -132,10 +132,19 @@ public class GameDraw extends JPanel{
 		// TODO circle fadeout over time
 
 		// Actually draw the circle
-		g2d.drawImage(circleBorderImage, circle.getX()-circleSize/2, circle.getY()-circleSize/2, circle.getX()+circleSize/2, circle.getY()+circleSize/2, 0, 0, circleBorderImage.getWidth(this), circleBorderImage.getHeight(this), this); 
-		g2d.drawImage(outerCircleImage, circle.getX()-circleSize, circle.getY()-circleSize, circle.getX()+circleSize, circle.getY()+circleSize, 0, 0, outerCircleImage.getWidth(this), outerCircleImage.getHeight(this), this); 
-		g2d.drawImage(circleImage, circle.getX()-circleSize/2, circle.getY()-circleSize/2, circle.getX()+circleSize/2, circle.getY()+circleSize/2, 0, 0, circleImage.getWidth(this), circleImage.getHeight(this), this);
-		
+		drawCircleImage(g2d, circle.getX(), circle.getY());
+	}
+	
+	/**
+	 * Draws an actual circle (with border image, outer image and actual image)
+	 * @param g2d The graphics to draw the circle on.
+	 * @param x The center x position of the circle to draw.
+	 * @param y The center y position of the circle to draw.
+	 */
+	private void drawCircleImage(Graphics2D g2d, int x, int y){
+		g2d.drawImage(circleBorderImage, x-circleSize/2, y-circleSize/2, x+circleSize/2, y+circleSize/2, 0, 0, circleBorderImage.getWidth(), circleBorderImage.getHeight(), this); 
+		g2d.drawImage(outerCircleImage, x-circleSize, y-circleSize, x+circleSize, y+circleSize, 0, 0, outerCircleImage.getWidth(), outerCircleImage.getHeight(), this); 
+		g2d.drawImage(circleImage, x-circleSize/2, y-circleSize/2, x+circleSize/2, y+circleSize/2, 0, 0, circleImage.getWidth(), circleImage.getHeight(), this);
 	}
 
 	/**
@@ -149,7 +158,6 @@ public class GameDraw extends JPanel{
 			return;
 		}
 
-		g2d.setColor(sliderColor);
 		// Draw a diagram to understand these points
 		// Depends on the angle of the slider, so we can't just use drawRectangle
 		int x1 = (int)(slider.getX() - Math.sin(slider.getAngle())*(circleSize/2));
@@ -166,11 +174,16 @@ public class GameDraw extends JPanel{
 		int[] yPos = {y1, y2, y3, y4};
 
 		// Draw a rectangle for the slider body
+		g2d.setColor(sliderColor);
 		g2d.fillPolygon(xPos, yPos, 4);
 
 		// And two circles for either end of the slider
-		drawFilledCircle(g2d, slider.getX(), slider.getY(), sliderEndColor, Color.BLACK);
-		drawFilledCircle(g2d, slider.getX() + (int)(Math.cos(slider.getAngle())*slider.getLength()), slider.getY() + (int)(Math.sin(slider.getAngle())*slider.getLength()), sliderEndColor, Color.BLACK);
+		double angle = slider.getAngle();
+		int endCircleX = slider.getX() + (int)(slider.getLength()*Math.cos(angle));
+		int endCircleY = slider.getY() + (int)(slider.getLength()*Math.sin(angle));
+		
+		drawCircleImage(g2d, slider.getX(), slider.getY());
+		drawCircleImage(g2d, endCircleX, endCircleY);
 
 		// Check if the slider has started yet;
 		// If so, draw a follow circle
