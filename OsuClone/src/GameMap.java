@@ -1,9 +1,13 @@
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
 
 /**
- * A map for the game.
+ * Defines all values (e.g. accuracy) for and
+ * elements within a MyOsu map. Created with a
+ * scanner on a map file.
  *
  * @author campberobe1
  */
@@ -26,13 +30,20 @@ public class GameMap {
 	private static final int[] APPROACH_RATE_VALUES = { 6000, 4500, 3500, 2500, 1800, 1300, 1100, 900, 700, 500 };
 	// Circle size is in pixels
 	private static final int[] CIRCLE_SIZE_VALUES = { 170, 155, 140, 125, 110, 95, 80, 65, 50, 35 };
+	// Health is as a ratio to 1; 1 is average
+	private static final double[] HEALTH_VALUES = { 4, 3, 2, 1, 0.8, 0.65, 0.5, 0.4, 0.3, 0.2 };
 
 	// The name of the map
 	private String mapName;
 	// The audio file corresponding to this map
 	private String audio;
-	// The queue of elements in the map
+	// A list of all elements in this map
+	private List<Element> elementList;
+	// A queue of elements in this map. This is created only when
+	// resetQueue() is called, and does not affect the list of
+	// elements in the map.
 	private Queue<Element> elements;
+	
 	// The time (ms) when the map's audio should start
 	private int audioStartTime;
 
@@ -42,6 +53,8 @@ public class GameMap {
 	private int approachRate;
 	// Circle size is self-explanatory
 	private int circleSize;
+	// Governs the rate at which health decays and how much the player is penalised for missing
+	private double health;
 
 	/**
 	 * Constructor; creates a new instance of GameMap.
@@ -56,9 +69,10 @@ public class GameMap {
 		overallDifficulty = OVERALL_DIFFICULTY_VALUES[s.nextInt()];
 		approachRate = APPROACH_RATE_VALUES[s.nextInt()];
 		circleSize = CIRCLE_SIZE_VALUES[s.nextInt()];
+		health = HEALTH_VALUES[s.nextInt()];
 
-		// Then, initialise the queue
-		elements = new LinkedList<Element>();
+		// Then, initialise the list
+		elementList = new ArrayList<Element>();
 
 		// And scroll through the scanner, finding all the values
 		while(s.hasNextLine()){
@@ -66,12 +80,12 @@ public class GameMap {
 			// Make a circle
 			if(elementType == 1){
 				// A circle has 3 parameters: start time, and x and y position
-				elements.offer(new Circle(s.nextInt(), s.nextInt(), s.nextInt()));
+				elementList.add(new Circle(s.nextInt(), s.nextInt(), s.nextInt()));
 			}
 			// Make a slider
 			if(elementType == 2){
 				// A slider has 6 parameters: start time, end time, length, angle, and x and y position (all integers)
-				elements.offer(new Slider(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt()));
+				elementList.add(new Slider(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt()));
 			}
 		}
 
@@ -87,7 +101,7 @@ public class GameMap {
 	}
 
 	/**
-	 * Returns and deletes the next element of the map
+	 * Returns and deletes the next element of the initialised map queue
 	 * @return The next element in the map.
 	 */
 	public Element poll(){
@@ -96,12 +110,23 @@ public class GameMap {
 	}
 
 	/**
-	 * Returns but does NOT DELETE next element in the map
+	 * Returns but does NOT DELETE next element in the initialised map queue
 	 * @return The next element in the map.
 	 */
 	public Element peek(){
 		if(elements.isEmpty()) return null;
 		return elements.peek();
+	}
+	
+	/**
+	 * Recreates the 'map queue'; the queue of all elements in the map,
+	 * from the list of elements
+	 */
+	public void resetQueue(){
+		elements = new LinkedList<Element>();
+		for(Element e : elementList){
+			elements.offer(e);
+		}
 	}
 
 	/**
@@ -123,6 +148,13 @@ public class GameMap {
 	 */
 	public int getCS(){
 		return circleSize;
+	}
+	
+	/**
+	 * Returns the health value for this map
+	 */
+	public double getHealth(){
+		return health;
 	}
 
 	/**

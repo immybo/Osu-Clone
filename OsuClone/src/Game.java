@@ -19,11 +19,12 @@ import javax.swing.event.MouseInputAdapter;
 /**
  * A map which is being played
  * @author campberobe1
- *
  */
 public class Game {
 	// The minimum combo that is required to break to play the combo break sound
 	private static final int MIN_COMBO_FOR_BREAK = 10;
+	// The loss of health per tick
+	private static final double HEALTH_LOSS = 0.1;
 	
 	// The map that this instance of Game is using
 	private GameMap map;
@@ -31,7 +32,6 @@ public class Game {
 	// Swing components
 	private JFrame mainFrame;
 	private GameDraw mainPanel;
-	private GameGUI guiPanel;
 	private GamePauseMenu pauseMenu;
 
 	// The game timer
@@ -58,7 +58,7 @@ public class Game {
 
 	// The score and current health of the player
 	private int score = 0;
-	private int health = 100;
+	private double health = 100;
 	
 	// The current combo
 	private int combo = 0;
@@ -73,9 +73,11 @@ public class Game {
 	private int[] scoreCounts = { 0, 0, 0, 0 };
 
 	// The time offsets which give the player scores of: 100, 50 and MISS, respectively
+	// Set at the start based off the map's health value, with these as the defaults
+	// Changing these will change all health losses in the same ratio for all maps
 	private int[] timeOffsets;
 	private int[] scores = { 300, 100, 50, 0 };
-	private int[] healthChange = { 10, -5, -10, -20 };
+	private int[] healthChange = { 10, 0, -7, -14 };
 
 	// The current position of the mouse
 	private int mouseX = -1;
@@ -97,6 +99,9 @@ public class Game {
 	private double pauseDelay = 0;
 	// The start time of pausing
 	private long pauseStartTime;
+	
+	// Whether or not the audio has initialised, since it has a short delay
+	public boolean audioInitialised = false;
 
 	/**
 	 * Constructor; instantiates Game.
@@ -104,20 +109,30 @@ public class Game {
 	 */
 	public Game(GameMap map){
 		this.map = map;
+		map.resetQueue();
 
 		currentMapTime = 0;
-		mapStartTime = System.currentTimeMillis();
 
 		timeOffsets = map.getOD();
 		approachTime = map.getAR();
 		circleSize = map.getCS();
+		
+		healthChange[3] /= map.getHealth();
+		healthChange[2] /= map.getHealth();
+		healthChange[1] /= map.getHealth();
+		// Negative ones (1,2,3) increase loss as health gets higher level (lower)
+		// Positive one (hit) decrease gain as health gets higher level
+		healthChange[0] *= map.getHealth();
 
 		audioStartTime = map.getAudioStartTime();
-
+		
 		// Begins playing the audio of the map
-		AudioPlayer.init();
-		AudioPlayer.playLongAudio(map.getAudio(), audioStartTime, volume);
+		AudioPlayer.playLongAudio(map.getAudio(), audioStartTime, volume, this);
+		
+		while(!audioInitialised){ try {Thread.sleep(10);} catch(Exception e){}}
 
+		mapStartTime = System.currentTimeMillis();
+		
 		createWindow();
 
 		// Set the timer to do the game loop
@@ -204,11 +219,6 @@ public class Game {
 		mainPanel.setFocusable(true);
 		mainPanel.requestFocus();
 
-		// Add the GUI panel to draw on
-		guiPanel = new GameGUI();
-		guiPanel.setPreferredSize(new Dimension(1000,70));
-
-		mainFrame.add(guiPanel, BorderLayout.NORTH);
 		mainFrame.add(mainPanel, BorderLayout.CENTER);
 
 		mainFrame.setVisible(true);
@@ -217,7 +227,8 @@ public class Game {
 		mainPanel.addMouseListener(mouseListener = new InnerMouseListener());
 		mainPanel.addMouseMotionListener(mouseListener);
 
-		mainPanel.addKeyListener(keyListener = new InnerKeyListener());
+		keyListener = new InnerKeyListener();
+		mainPanel.addKeyListener(keyListener);
 	}
 
 	/**
@@ -227,6 +238,7 @@ public class Game {
 		AudioPlayer.stopLongAudio(map.getAudio());
 		AudioPlayer.terminate();
 		mainFrame.dispose();
+		timer.stop();
 	}
 
 	/**
@@ -260,11 +272,11 @@ public class Game {
 	 * Opens the pause menu and pauses the game
 	 */
 	private void doPause(){
-		pauseStartTime = System.currentTimeMillis();
 
 		// Swap the graphics around
 		pauseMenu = new GamePauseMenu();
 		pauseMenu.init(this);
+		pauseMenu.setVisible(true);
 		
 		mainFrame.remove(mainPanel);
 		mainFrame.add(pauseMenu, BorderLayout.CENTER);
@@ -273,6 +285,7 @@ public class Game {
 		pauseMenu.repaint();
 		
 		// Stop the timer, remove the listeners and pause the audio
+		pauseStartTime = System.currentTimeMillis();
 		timer.stop();
 		mainPanel.removeMouseListener(mouseListener);
 		mainPanel.removeMouseMotionListener(mouseListener);
@@ -284,11 +297,10 @@ public class Game {
 	 * Resumes the game after pausing
 	 */
 	public void doUnpause(){
-		// Change the total time spent paused so that we know where we're up to in the map
-		pauseDelay += System.currentTimeMillis() - pauseStartTime;
 		
 		// Swap the graphics around
 		mainFrame.remove(pauseMenu);
+		pauseMenu = null;
 		mainFrame.add(mainPanel, BorderLayout.CENTER);
 		mainFrame.revalidate();
 		
@@ -297,6 +309,10 @@ public class Game {
 		mainPanel.addMouseListener(mouseListener);
 		mainPanel.addMouseMotionListener(mouseListener);
 		mainPanel.addKeyListener(keyListener);
+		mainPanel.requestFocus();
+		
+		// Change the total time spent paused so that we know where we're up to in the map
+		pauseDelay += System.currentTimeMillis() - pauseStartTime;
 		timer.start();
 	}
 	
@@ -304,7 +320,8 @@ public class Game {
 	 * Restarts the map
 	 */
 	public void restart(){
-		
+		terminate();
+		new Game(map);
 	}
 
 	/**
@@ -356,8 +373,6 @@ public class Game {
 
 		// The amount which the cursor is out by
 		double offset = Math.sqrt(Math.pow(mouseX-reqX, 2) + Math.pow(mouseY-reqY, 2));
-		//System.out.println("offset : " + offset);
-		//System.out.println("x: " + mouseX + " y : " + mouseY);
 
 		if(offset < circleSize/2){
 			activeSlider.sliderPoints++;
@@ -427,7 +442,7 @@ public class Game {
 		if(element.getElementType() == 1){
 			// Figure out the time offset for circles
 			int supposedTime = element.getTime();
-			long timeOffset = Math.abs(System.currentTimeMillis() - mapStartTime - supposedTime);
+			long timeOffset = Math.abs(currentMapTime - supposedTime);
 
 			if(wasClicked){
 				if(timeOffset < timeOffsets[0]) classification = 0;
@@ -520,19 +535,21 @@ public class Game {
 
 		// Update the gui attributes
 		setGuiAttributes();
+		
+		// Reduce the remaining health
+		health -= HEALTH_LOSS/map.getHealth();
 
 		// Render
 		mainPanel.repaint();
-		guiPanel.repaint();
 	}
 
 	/**
 	 * Updates the score, accuracy and health for the gui
 	 */
 	private void setGuiAttributes(){
-		guiPanel.setScore(score);
-		guiPanel.setHealth(health);
-		guiPanel.setAccuracy(accuracy);
+		mainPanel.setScore(score);
+		mainPanel.setHealth(health);
+		mainPanel.setAccuracy(accuracy);
 	}
 
 	/**

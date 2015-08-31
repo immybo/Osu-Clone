@@ -2,6 +2,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +11,6 @@ import java.util.*;
 /**
  * Handles drawing for a game of MyOsu!
  * @author campberobe1
- *
  */
 public class GameDraw extends JPanel{
 	// The instance of game that this is drawing for
@@ -23,6 +23,13 @@ public class GameDraw extends JPanel{
 	private int approachSize;
 	// The accuracy (in ms) required before the circle disappears
 	private int accuracy;
+	
+	// The current score and health of the player;
+	// These are accurate only to the last call of setScore/setHealth
+	private int score = 0;
+	private double health = 100;
+	// The accuracy which the player currently has; different to accuracy above
+	private double currentAccuracy = 0;
 
 	// The list of circles to be drawn
 	private java.util.List<Circle> circles = new ArrayList<Circle>();
@@ -37,6 +44,15 @@ public class GameDraw extends JPanel{
 	private BufferedImage circleImage;
 	private BufferedImage outerCircleImage;
 	private BufferedImage circleBorderImage;
+	private BufferedImage sliderFollowCircleImage;
+	
+	private BufferedImage[] numberImage;
+	private BufferedImage dotImage;
+	private BufferedImage percentImage;
+	
+	private BufferedImage healthBarImage3;
+	private BufferedImage healthBarImage2;
+	private BufferedImage healthBarImage1;
 
 	// The colors to draw the circles in
 	Color borderColor = Color.BLACK;
@@ -70,6 +86,21 @@ public class GameDraw extends JPanel{
 			circleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE));
 			outerCircleImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_OUTER));
 			circleBorderImage = ImageIO.read(new File(Options.SKIN_HIT_CIRCLE_BORDER));
+			
+			sliderFollowCircleImage = ImageIO.read(new File(Options.SKIN_SLIDER_FOLLOW_CIRCLE));
+			
+			dotImage = ImageIO.read(new File(Options.SKIN_DOT));
+			percentImage = ImageIO.read(new File(Options.SKIN_PERCENT));
+			
+			healthBarImage3 = ImageIO.read(new File(Options.SKIN_HEALTHBAR_3));
+			healthBarImage2 = ImageIO.read(new File(Options.SKIN_HEALTHBAR_2));
+			healthBarImage1 = ImageIO.read(new File(Options.SKIN_HEALTHBAR_1));
+			
+			numberImage = new BufferedImage[10];
+			for(int i = 0; i < 10; i++){
+				numberImage[i] = ImageIO.read(new File(Options.SKIN_NUMBER_BASE + i + Options.SKIN_NUMBER_END));
+			}
+			
 		}
 		catch(IOException e){
 			System.err.println("Could not read from skin image files! " + e);
@@ -106,7 +137,76 @@ public class GameDraw extends JPanel{
 			drawSliderElement(g2d, next, dT);
 		}
 
+		drawGUI(g2d);
+		
 		previousTime = currentTime;
+	}
+
+	public void drawGUI(Graphics2D g2d){
+		// Draw the score
+		String strScore = Integer.toString(score);
+		// Start at the right
+		int scoreYOffset = 15;
+		int scoreXOffset = 15;
+		int currentX = this.getWidth()-scoreXOffset;
+		for(int i = strScore.length()-1; i >= 0; i--){
+			// Well, it turns out that getting an integer value for one place in an integer
+			// isn't that simple. First, we get the appropriate character from the string,
+			// then get the toString of that, and finally parse that string as an int...
+			BufferedImage img = numberImage[Integer.parseInt(((Character)(strScore.charAt(i))).toString())];
+			g2d.drawImage(img, currentX-img.getWidth(), scoreYOffset, currentX, scoreYOffset+img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), this);
+			currentX -= img.getWidth()+5;
+		}
+		
+		// Draw the health
+		{
+			BufferedImage img;
+			if(health >= 70) img = healthBarImage3;
+			else if(health >= 40) img = healthBarImage2;
+			else img = healthBarImage1;
+		
+			g2d.drawImage(img, 0, 0, (int)(health*12), img.getHeight(), 0, 0, img.getWidth(), img.getHeight(), this);
+		}
+		
+		// Draw the accuracy
+		String strAcc = String.format("%.2f",currentAccuracy);
+		int accYOffset = 80;
+		int accXOffset = 15;
+		currentX = this.getWidth()-accXOffset;
+		
+		// Draw a percent sign at the end
+		g2d.drawImage(percentImage, currentX-percentImage.getWidth()/2, accYOffset, currentX, accYOffset+percentImage.getHeight()/2, 0, 0, percentImage.getWidth(), percentImage.getHeight(), this);
+		currentX -= percentImage.getWidth()/2 + 5;
+		for(int i = strAcc.length()-1; i >= 0; i--){
+			BufferedImage img;
+			// If it's a dot, obviously we can't parse it as an int
+			if(strAcc.charAt(i) == '.') img = dotImage;
+			else img = numberImage[Integer.parseInt(((Character)(strAcc.charAt(i))).toString())];
+			
+			g2d.drawImage(img, currentX-img.getWidth()/2, accYOffset, currentX, accYOffset+img.getHeight()/2, 0, 0, img.getWidth(), img.getHeight(), this);
+			currentX -= img.getWidth()/2 + 5;
+		}
+	}
+
+	/**
+	 * Sets the score to draw
+	 */
+	public void setScore(int score){
+		this.score = score;
+	}
+
+	/**
+	 * Sets the health to draw
+	 */
+	public void setHealth(double health){
+		this.health = health;
+	}
+	
+	/**
+	 * Sets the accuracy to draw
+	 */
+	public void setAccuracy(double currentAccuracy){
+		this.currentAccuracy = currentAccuracy;
 	}
 
 	/**
@@ -190,11 +290,12 @@ public class GameDraw extends JPanel{
 		if(game.getCurrentMapTime() > slider.getTime()){
 			// Increment the follow circle position
 			slider.followCirclePos += (slider.getLength()+0.0)/(slider.getEndTime()-slider.getTime())*dT;
-			// Draw the follow circle
+			
 			int followX = (int)(slider.getX() + Math.cos(slider.getAngle())*slider.followCirclePos);
 			int followY = (int)(slider.getY() + Math.sin(slider.getAngle())*slider.followCirclePos);
-
-			drawFilledCircle(g2d, followX, followY, followCircleColor, Color.BLACK);
+			
+			// Draw the follow circle
+			g2d.drawImage(sliderFollowCircleImage, followX, followY, followX+circleSize, followY+circleSize, 0, 0, sliderFollowCircleImage.getWidth(), sliderFollowCircleImage.getHeight(), this);
 		}
 		// If not, draw an approach circle
 		else{

@@ -1,6 +1,8 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
+import javafx.embed.swing.JFXPanel;
+
 import java.io.*;
 import java.util.*;
 import java.awt.*;
@@ -49,13 +51,14 @@ public class GameMenu {
 		Options.init();
 		initialiseMenu();
 		initialiseButtons();
+		new JFXPanel();	// To initialise the class - this sometimes freezes it for a few seconds,
+		// to which I haven't been able to find a solution.
 	}
 
 	/**
 	 * Creates the interface for the game's selection menu
 	 */
 	private void initialiseMenu(){
-		
 		// Create the outer JFrame for the selection menu
 		menuOuterFrame = new JFrame();
 
@@ -174,10 +177,18 @@ public class GameMenu {
 		}
 
 		if(mapButton.contains(source)){
-			if(currentGame != null) currentGame.terminate();
-			GameMap newGameMap = getMap(mapList.get(source));
-			currentGame = new Game(newGameMap);
+			buildGame(getMap(mapList.get(source)));
 		}
+	}
+	
+	/**
+	 * Closes any current game instance and
+	 * creates a new one from the specified
+	 * GameMap
+	 */
+	private void buildGame(GameMap map){
+		if(currentGame != null) currentGame.terminate();
+		currentGame = new Game(map);
 	}
 
 	/**
