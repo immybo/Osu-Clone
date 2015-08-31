@@ -229,11 +229,25 @@ public class GameDraw extends JPanel{
 			double approachY = circle.getY()-circleSize/2-(circle.approachCircleSize-circleSize)/2;
 			g2d.drawImage(approachCircleImage, (int)approachX, (int)approachY, (int)(approachX+circle.approachCircleSize), (int)(approachY+circle.approachCircleSize), 0, 0, approachCircleImage.getWidth(this), approachCircleImage.getHeight(this), this);
 		}
-		
-		// TODO circle fadeout over time
+		// Set a fadeout for the circle if need be
+		else{
+			// The time past when the circle was supposed to be clicked
+			double pastTime = (1-circle.approachCircleSize/circleSize) * approachRate;
+			// A float amount for the fadeout of the circle
+			// This is 1 if the time past when the circle should've been clicked is the maximum accuracy threshold
+			float fadeout = (float)(pastTime / accuracy);
+			
+			// Just in case of lag, etc., which might mean that the time for removing the circle
+			// has already passed and the fadeout value might try to be over 1.
+			if(fadeout > 1) fadeout = 1;
+			
+			g2d.setComposite(AlphaComposite.SrcOver.derive(1f - fadeout));
+		}
 
 		// Actually draw the circle
 		drawCircleImage(g2d, circle.getX(), circle.getY());
+		
+		g2d.setComposite(AlphaComposite.SrcOver.derive(1f));
 	}
 	
 	/**
