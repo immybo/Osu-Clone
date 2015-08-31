@@ -55,12 +55,13 @@ public class GameDraw extends JPanel{
 	private BufferedImage healthBarImage1;
 
 	// The colors to draw the circles in
-	Color borderColor = Color.BLACK;
-	Color fillColor = Color.RED;
-	Color approachColor = Color.BLUE;
-	Color sliderColor = new Color(240, 240, 240, 100);
-	Color sliderEndColor = Color.CYAN;
-	Color followCircleColor = Color.GRAY;
+	private Color borderColor = Color.BLACK;
+	private Color fillColor = Color.RED;
+	private Color approachColor = Color.BLUE;
+	private Color sliderColor = new Color(240, 240, 240, 100);
+	private Color sliderEndColor = Color.CYAN;
+    private Color followCircleColor = Color.GRAY; 
+	private Color sliderLineColor = Color.WHITE;
 
 	private long previousTime;
 
@@ -258,24 +259,24 @@ public class GameDraw extends JPanel{
 			return;
 		}
 
+		int strokeSize = 4;
 		// Draw a diagram to understand these points
 		// Depends on the angle of the slider, so we can't just use drawRectangle
-		int x1 = (int)(slider.getX() - Math.sin(slider.getAngle())*(circleSize/2));
-		int x2 = (int)(slider.getX() + Math.sin(slider.getAngle())*(circleSize/2));
-		int x3 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) + Math.sin(slider.getAngle())*(circleSize/2));
-		int x4 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) - Math.sin(slider.getAngle())*(circleSize/2));
+		int x1 = (int)(slider.getX() - Math.sin(slider.getAngle())*(circleSize/2 - strokeSize));
+		int x2 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) - Math.sin(slider.getAngle())*(circleSize/2 - strokeSize));
+		int x3 = (int)(slider.getX() + Math.sin(slider.getAngle())*(circleSize/2 - strokeSize));
+		int x4 = (int)(slider.getX() + Math.cos(slider.getAngle())*(slider.getLength()) + Math.sin(slider.getAngle())*(circleSize/2 - strokeSize));
 
-		int y1 = (int)(slider.getY() + Math.cos(slider.getAngle())*(circleSize/2));
-		int y2 = (int)(slider.getY() - Math.cos(slider.getAngle())*(circleSize/2));
-		int y3 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) - Math.cos(slider.getAngle())*(circleSize/2));
-		int y4 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) + Math.cos(slider.getAngle())*(circleSize/2));
+		int y1 = (int)(slider.getY() + Math.cos(slider.getAngle())*(circleSize/2 - strokeSize));
+		int y2 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) + Math.cos(slider.getAngle())*(circleSize/2 - strokeSize));
+		int y3 = (int)(slider.getY() - Math.cos(slider.getAngle())*(circleSize/2 - strokeSize));
+		int y4 = (int)(slider.getY() + Math.sin(slider.getAngle())*(slider.getLength()) - Math.cos(slider.getAngle())*(circleSize/2 - strokeSize));
 
-		int[] xPos = {x1, x2, x3, x4};
-		int[] yPos = {y1, y2, y3, y4};
-
-		// Draw a rectangle for the slider body
-		g2d.setColor(sliderColor);
-		g2d.fillPolygon(xPos, yPos, 4);
+		// Draw two parallel lines for the slider body
+		g2d.setColor(sliderLineColor);
+		g2d.setStroke(new BasicStroke(strokeSize));
+		g2d.drawLine(x1, y1, x2, y2);
+		g2d.drawLine(x3, y3, x4, y4);
 
 		// And two circles for either end of the slider
 		double angle = slider.getAngle();
@@ -295,7 +296,7 @@ public class GameDraw extends JPanel{
 			int followY = (int)(slider.getY() + Math.sin(slider.getAngle())*slider.followCirclePos);
 			
 			// Draw the follow circle
-			g2d.drawImage(sliderFollowCircleImage, followX, followY, followX+circleSize, followY+circleSize, 0, 0, sliderFollowCircleImage.getWidth(), sliderFollowCircleImage.getHeight(), this);
+			g2d.drawImage(sliderFollowCircleImage, followX-circleSize/2, followY-circleSize/2, followX+circleSize/2, followY+circleSize/2, 0, 0, sliderFollowCircleImage.getWidth(), sliderFollowCircleImage.getHeight(), this);
 		}
 		// If not, draw an approach circle
 		else{
@@ -305,16 +306,6 @@ public class GameDraw extends JPanel{
 			double approachY = slider.getY()-circleSize/2-(approachCircleSize-circleSize)/2;
 			g2d.drawOval((int)approachX, (int)approachY, (int)approachCircleSize, (int)approachCircleSize);
 		}
-	}
-
-	/**
-	 * Draws a filled circle at the specific center points with a border
-	 */
-	private void drawFilledCircle(Graphics2D g2d, int x, int y, Color circleFillColor, Color circleBorderColor){
-		g2d.setColor(circleFillColor);
-		g2d.fillOval(x-circleSize/2, y-circleSize/2, circleSize, circleSize);
-		g2d.setColor(circleBorderColor);
-		g2d.drawOval(x-circleSize/2, y-circleSize/2, circleSize, circleSize);
 	}
 
 	/**
