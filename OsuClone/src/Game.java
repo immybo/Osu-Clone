@@ -23,16 +23,21 @@ import javax.swing.event.MouseInputAdapter;
 public class Game {
 	// The minimum combo that is required to break to play the combo break sound
 	private static final int MIN_COMBO_FOR_BREAK = 10;
-	// The loss of health per tick
+	// The base loss of health per tick; modified by the map's health
 	private static final double HEALTH_LOSS = 0.1;
 	
-	// The map that this instance of Game is using
+	// Volumes for sound clips; in relative dB
+	private static final float HIT_SOUND_VOLUME = -20f;
+	private static final float COMBO_BREAK_VOLUME = 0.7f;
+	
+	// The map that is being played
 	private GameMap map;
 
 	// Swing components
 	private JFrame mainFrame;
 	private GameDraw mainPanel;
 	private GamePauseMenu pauseMenu;
+	private GameEndScreen endScreen;
 
 	// The game timer
 	private Timer timer;
@@ -95,9 +100,9 @@ public class Game {
 	// The volume that the music should be played at
 	private double volume = 0.5;
 	
-	// The amount of time which the map has been paused for
+	// The total amount of time which the map has been paused for
 	private double pauseDelay = 0;
-	// The start time of pausing
+	// The start time of the current pause; only reliable when the game is paused
 	private long pauseStartTime;
 	
 	// Whether or not the audio has initialised, since it has a short delay
@@ -108,6 +113,8 @@ public class Game {
 	 * @param map The GameMap which this instance will play.
 	 */
 	public Game(GameMap map){
+		// Set all the initial attributes from the map
+		
 		this.map = map;
 		map.resetQueue();
 
@@ -129,9 +136,8 @@ public class Game {
 		// Begins playing the audio of the map
 		AudioPlayer.playLongAudio(map.getAudio(), audioStartTime, volume, this);
 		
+		// I know that this is poor code, but I'm not really sure what else to use.
 		while(!audioInitialised){ try {Thread.sleep(10);} catch(Exception e){}}
-
-		mapStartTime = System.currentTimeMillis();
 		
 		createWindow();
 
@@ -147,6 +153,8 @@ public class Game {
 		timer = new Timer(Options.GAME_TICK_TIME, new InnerActionListener());
 		timer.setInitialDelay(0);
 		timer.start();
+		
+		mapStartTime = System.currentTimeMillis();
 	}
 	
 	/**
@@ -237,8 +245,8 @@ public class Game {
 	public void terminate(){
 		AudioPlayer.stopLongAudio(map.getAudio());
 		AudioPlayer.terminate();
-		mainFrame.dispose();
 		timer.stop();
+		mainFrame.dispose();
 	}
 
 	/**
@@ -272,7 +280,6 @@ public class Game {
 	 * Opens the pause menu and pauses the game
 	 */
 	private void doPause(){
-
 		// Swap the graphics around
 		pauseMenu = new GamePauseMenu();
 		pauseMenu.init(this);
@@ -297,7 +304,6 @@ public class Game {
 	 * Resumes the game after pausing
 	 */
 	public void doUnpause(){
-		
 		// Swap the graphics around
 		mainFrame.remove(pauseMenu);
 		pauseMenu = null;
@@ -455,11 +461,6 @@ public class Game {
 				// If it was never clicked, then it was a miss
 				classification = 3;
 			}
-
-			// Play the circle hit sound if the circle was hit
-			if(classification != 3){
-				AudioPlayer.playClip(Options.SKIN_CIRCLE_HIT_SOUND);
-			}
 		}
 
 		// Figure out how many points to give for a slider
@@ -479,12 +480,13 @@ public class Game {
 		// Play the combo break sound if necessary, and break the combo if they miss
 		if(classification == 3){
 			if(combo > MIN_COMBO_FOR_BREAK)
-				AudioPlayer.playClip(Options.SKIN_COMBO_BREAK_SOUND);
+				AudioPlayer.playClip(Options.SKIN_COMBO_BREAK_SOUND, COMBO_BREAK_VOLUME);
 			
 			combo = 0;
 		}
-		// Otherwise increment the current combo
+		// Otherwise increment the current combo and play the hit sound
 		else{
+			AudioPlayer.playClip(Options.SKIN_CIRCLE_HIT_SOUND, HIT_SOUND_VOLUME);
 			combo++;
 		}
 			
@@ -493,6 +495,10 @@ public class Game {
 
 		// And finally, remove the element from currentelements
 		currentElements.remove(element);
+		
+		// If the map has no more elements and there are none on the screen, then it is finished!
+		if(map.peek() == null && currentElements.isEmpty())
+			finishMap();
 	}
 
 	/**
@@ -570,8 +576,9 @@ public class Game {
 	 * Adds it to the queue if it should be.
 	 */
 	private void evaluateNext(){
-		// TODO end the map if the map is finished. Currently: return
-		if(map.peek() == null) return;
+		// There might still be elements on the screen even if there aren't any in the map
+		if(map.peek() == null)
+			return;
 
 		int nextTime = map.peek().getTime();
 		if(nextTime == -1) return;
@@ -608,5 +615,33 @@ public class Game {
 	 */
 	public int getCurrentMapTime(){
 		return currentMapTime;
+	}
+	
+	/**
+	 * Ends the currently playing map;
+	 * Brings up the end of map screen
+	 */
+	private void finishMap(){
+		// Stop the game
+		AudioPlayer.stopLongAudio(map.getAudio());
+		AudioPlayer.terminate();
+		timer.stop();
+		
+		// Remove the listeners
+		mainPanel.removeMouseListener(mouseListener);
+		mainPanel.removeMouseMotionListener(mouseListener);
+		mainPanel.removeKeyListener(keyListener);
+		
+		// Switch the game panel out for the end of game panel
+		endScreen = new GameEndScreen();
+		endScreen.setPreferredSize(mainFrame.getSize());
+		endScreen.init(score, accuracy, scoreCounts, map, this);
+		endScreen.setVisible(true);
+		
+		mainFrame.remove(mainPanel);
+		mainFrame.add(endScreen, BorderLayout.CENTER);
+		
+		mainFrame.revalidate();
+		mainFrame.repaint();
 	}
 }

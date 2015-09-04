@@ -70,11 +70,27 @@ public class Options {
 	
 	public final static String SKIN_SLIDER_FOLLOW_CIRCLE = "skin/sliderfollowcircle.png";
 	
+	public final static String SKIN_SS_RANK = "skin/ranking-X.png";
+	public final static String SKIN_S_RANK = "skin/ranking-S.png";
+	public final static String SKIN_A_RANK = "skin/ranking-A.png";
+	public final static String SKIN_B_RANK = "skin/ranking-B.png";
+	public final static String SKIN_C_RANK = "skin/ranking-C.png";
+	public final static String SKIN_D_RANK = "skin/ranking-D.png";
+	
+	public final static String SKIN_300_HIT = "skin/hit300.png";
+	public final static String SKIN_100_HIT = "skin/hit100.png";
+	public final static String SKIN_50_HIT = "skin/hit50.png";
+	public final static String SKIN_0_HIT = "skin/hit0.png";
+	
+	public final static String SKIN_RANKING_BACK_BUTTON = "skin/ranking-back.png";
+	public final static String SKIN_TEXT_ACCURACY = "skin/ranking-accuracy.png";
+	public final static String SKIN_TEXT_RANKING = "skin/ranking-title.png";
+	
 	// Skin sounds
 	public final static String SKIN_COMBO_BREAK_SOUND = "skin/combobreak.mp3";
 	public final static String SKIN_FAIL_SOUND = "skin/failsound.mp3";
 	public final static String SKIN_SUCCEED_SOUND = "skin/applause.mp3";
-	public final static String SKIN_CIRCLE_HIT_SOUND = "skin/normal-hitclap.wav";
+	public final static String SKIN_CIRCLE_HIT_SOUND = "skin/soft-hitnormal.wav";
 	
 	
 	// Maps options that don't need to be read by the user

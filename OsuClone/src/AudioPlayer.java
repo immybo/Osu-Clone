@@ -5,6 +5,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
 
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -14,7 +15,8 @@ import javafx.util.Duration;
  * Handles playing all sounds for MyOsu, statically.
  * Due to technical constraints, only one clip and
  * one media player (long audio) may be played at
- * any given time.
+ * any given time, but this is sufficient for the
+ * purposes of this game.
  * 
  * @author Robert Campbell
  */
@@ -110,9 +112,10 @@ public class AudioPlayer {
 	 * for audio over a few seconds long.
 	 * 
 	 * @param fname The filename of the audio to be played.
+	 * @param volume The volume of the audio to be played.
 	 * @return Whether or not the audio clip was played.
 	 */
-	public static boolean playClip(String fname){
+	public static boolean playClip(String fname, float volume){
 		if(fname == null) return false;
 		
 		// Stop the current clip if there is one
@@ -138,6 +141,10 @@ public class AudioPlayer {
 		try{
 			if(inputStream == null) return false;
 			currentClip.open(inputStream);
+			
+			FloatControl volumeControl = (FloatControl)currentClip.getControl(FloatControl.Type.MASTER_GAIN);
+			volumeControl.setValue(volume);
+			
 			currentClip.start();
 		}
 		catch(Exception e){

@@ -1,8 +1,13 @@
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
+
+import javax.imageio.ImageIO;
 
 /**
  * Defines all values (e.g. accuracy) for and
@@ -55,6 +60,9 @@ public class GameMap {
 	private int circleSize;
 	// Governs the rate at which health decays and how much the player is penalised for missing
 	private double health;
+	
+	// The background image that should be displayed for this map
+	private BufferedImage backgroundImage;
 
 	/**
 	 * Constructor; creates a new instance of GameMap.
@@ -65,6 +73,11 @@ public class GameMap {
 		mapName = s.nextLine();
 		audio = s.next();
 		audioStartTime = s.nextInt();
+		
+		// Initialise the background
+		try{ backgroundImage = ImageIO.read(new File(s.next())); }
+		// It's fine if there's no background image
+		catch(IOException e){ backgroundImage = null; }
 
 		overallDifficulty = OVERALL_DIFFICULTY_VALUES[s.nextInt()];
 		approachRate = APPROACH_RATE_VALUES[s.nextInt()];
@@ -169,5 +182,13 @@ public class GameMap {
 	 */
 	public int getAudioStartTime(){
 		return audioStartTime;
+	}
+	
+	/**
+	 * Returns the BufferedImage of the background of this map
+	 * Returns null if this map has no background image
+	 */
+	public BufferedImage getBackground(){
+		return backgroundImage;
 	}
 }
