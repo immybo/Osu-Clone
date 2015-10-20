@@ -1,6 +1,5 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
 import javafx.embed.swing.JFXPanel;
@@ -16,7 +15,7 @@ import java.awt.event.*;
  */
 public class GameMenu {
 	/** MODS ACTIVE **/
-	private boolean isHidden = false;
+	private Map<String, Boolean> mods;
 
 	/** JCOMPONENTS **/
 	private JFrame menuOuterFrame;
@@ -28,8 +27,8 @@ public class GameMenu {
 	private OptionMenu optionFrame;
 
 	private JButton optionButton;
-
-	private JCheckBox hiddenCheckbox;
+	private JButton modButton;
+	private JButton exitButton;
 
 	private java.util.List<JButton> mapButton = new ArrayList<JButton>();
 	private Map<JButton, GameMap> mapList = new HashMap<JButton, GameMap>();
@@ -84,11 +83,12 @@ public class GameMenu {
 
 		menuOuterFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		menuOuterFrame.setTitle("MyOsu! Menu");
-		menuOuterFrame.setLayout(new BorderLayout(0,0));
 
 		// Initialise the background
 		backgroundPanel = new MenuBackground();
 		menuOuterFrame.setContentPane(backgroundPanel);
+		
+		menuOuterFrame.setLayout(new BorderLayout(0,0));
 		
 		checkFont();
 		
@@ -170,21 +170,19 @@ public class GameMenu {
 		
 		// Make a scrollPane, in case we have more maps than we can display in one screen
 		JScrollPane scrollPane = new JScrollPane(mapButtonPanel);
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setOpaque(false);
 		scrollPane.getViewport().setOpaque(false);
+		// scroll pane defaults to having a border?
+		scrollPane.setBorder(new EmptyBorder(0,0,0,0));
 		
 		java.util.List<String> mapNames = getMaps(Options.MAP_FILE);
 		for(String name : mapNames){
 			GameMap currentMap = getMap(name);
-			JButton btn = new JButton(name);
+			JButton btn = addButton(name, Color.WHITE, Color.BLACK, mapButtonPanel);
 			btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-			btn.setForeground(Color.WHITE);
-			btn.setBackground(Color.BLACK);
-			
 			mapList.put(btn, currentMap);
-			mapButtonPanel.add(btn);
 			mapButton.add(btn);
 		}
 		
@@ -194,22 +192,39 @@ public class GameMenu {
 	}
 	
 	/**
+	 * Creates and returns a new JButton with the given parameters.
+	 * @param name The text to appear on the button.
+	 * @param foreground The foreground (text) color to use.
+	 * @param background The background color to use.
+	 * @param component The component to add the button to.
+	 */
+	private JButton addButton(String name, Color foreground, Color background, JComponent component){
+		JButton button = new JButton(name);
+		button.setForeground(foreground);
+		button.setBackground(background);
+		component.add(button);
+		return button;
+	}
+	
+	/**
 	 * Initialises the main panel of the menu frame
 	 */
 	private void initMainPanel(){
 		mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
 		mainPanel.setOpaque(false);
 		
 		// Create the various buttons
-		optionButton = new JButton("Options");
-		optionButton.setForeground(Color.WHITE);
-		optionButton.setBackground(Color.BLACK);
-		mainPanel.add(optionButton);
-
-		hiddenCheckbox = new JCheckBox("Hidden");
-		hiddenCheckbox.setOpaque(false);
-		//mainPanel.add(hiddenCheckbox);
+		optionButton = addButton("Options", Color.WHITE, Color.BLACK, mainPanel);
+		modButton = addButton("Mods", Color.WHITE, Color.BLACK, mainPanel);
+		exitButton = addButton("Exit", Color.WHITE, Color.BLACK, mainPanel);
+		
+		mainPanel.setPreferredSize(new Dimension(menuOuterFrame.getWidth(), (int)optionButton.getPreferredSize().getHeight()));
+		
+		// set the buttons to each take a third of the width (but maintain the default height)
+		optionButton.setPreferredSize(new Dimension((int)mainPanel.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
+		modButton.setPreferredSize(new Dimension((int)mainPanel.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
+		exitButton.setPreferredSize(new Dimension((int)mainPanel.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
 		
 		menuOuterFrame.add(mainPanel, BorderLayout.SOUTH);
 	}
@@ -222,10 +237,8 @@ public class GameMenu {
 		int randomIndex = (int)(Math.random()*buttonsList.size());
 		
 		JButton randomButton = buttonsList.get(randomIndex);
-		GameMap randomMap = mapList.get(randomButton);
 		
-		selectedButton = randomButton;
-		setBackground(randomMap);
+		selectButton(randomButton);
 	}
 
 	// Defines drawing the background image
@@ -283,7 +296,7 @@ public class GameMenu {
 	}
 
 	/**
-	 * Initialises the button and checkbox listeners for the menu
+	 * Initialises the button listeners for the menu
 	 */
 	private void initialiseButtons(){
 		// Add an action listener to each of the buttons
@@ -294,20 +307,13 @@ public class GameMenu {
 		};
 
 		optionButton.addActionListener(l);
+		modButton.addActionListener(l);
+		exitButton.addActionListener(l);
 
 		for(JButton btn : mapButton){
 		  btn.addActionListener(l);
 		}
 
-		// And add one to each of the checkboxes
-		ItemListener c = new ItemListener(){
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				doCheckbox(e);
-			}
-		};
-
-		hiddenCheckbox.addItemListener(c);
 	}
 
 
@@ -320,18 +326,37 @@ public class GameMenu {
 		if(source.equals(optionButton)){
 			openOptionFrame();
 		}
+		else if(source.equals(exitButton)){
+			System.exit(0);
+		}
 
 		// If one of the map buttons is pressed,
 		else if(mapButton.contains(source)){
 			// If the button was already selected, we want to start the game with that map
 			if(selectedButton == source)
 				buildGame(mapList.get(source));
-			// Otherwise, we want to select that button and set the background to the background of that map
-			else{
-				selectedButton = (JButton)source;
-				setBackground(mapList.get(mapButton));
-			}
+			// Otherwise, we want to select that button
+			else
+				selectButton((JButton)source);
 		}
+	}
+	
+	/**
+	 * Selects the given button, changing the background and the button colors
+	 */
+	private void selectButton(JButton button){
+		// Change the colours of the previous button back (if there is one)
+		if(selectedButton != null){
+			selectedButton.setBackground(Color.BLACK);
+			selectedButton.setForeground(Color.WHITE);
+		}
+		
+		selectedButton = button;
+		setBackground(mapList.get(button));
+		
+		// Change the colours of the new button
+		selectedButton.setBackground(Color.WHITE);
+		selectedButton.setForeground(Color.BLACK);
 	}
 	
 	/**
@@ -342,18 +367,6 @@ public class GameMenu {
 	private void buildGame(GameMap map){
 		if(currentGame != null) currentGame.terminate();
 		currentGame = new Game(map);
-	}
-
-	/**
-	 * Handles checkbox actions for the menu
-	 */
-	private void doCheckbox(ItemEvent e){
-		Object source = e.getSource();
-		boolean state = e.getStateChange()==1 ? true : false;
-
-		if(source.equals(hiddenCheckbox)){
-			isHidden = state;
-		}
 	}
 
 	/**
