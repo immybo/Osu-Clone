@@ -56,11 +56,11 @@ public class GameMenu {
 	 * Should be called at startup.
 	 */
 	public GameMenu(){
+		new JFXPanel();	// To initialise the class - this sometimes freezes it for a few seconds,
+		// to which I haven't been able to find a solution.
 		Options.init();
 		initialiseMenu();
 		initialiseButtons();
-		new JFXPanel();	// To initialise the class - this sometimes freezes it for a few seconds,
-		// to which I haven't been able to find a solution.
 	}
 
 	/**
@@ -294,6 +294,17 @@ public class GameMenu {
 		}
 		backgroundPanel.repaint();
 	}
+	
+	/**
+	 * Plays the audio clip corresponding to a given map.
+	 * Starts at the map's start position
+	 */
+	private void playAudio(GameMap map){
+		if(map == null) return;
+		if(map.getAudio() == null) return;
+		
+		AudioPlayer.playLongAudio(map.getAudio(), map.getAudioStartTime(), 0.3);
+	}
 
 	/**
 	 * Initialises the button listeners for the menu
@@ -353,6 +364,7 @@ public class GameMenu {
 		
 		selectedButton = button;
 		setBackground(mapList.get(button));
+		playAudio(mapList.get(button));
 		
 		// Change the colours of the new button
 		selectedButton.setBackground(Color.WHITE);

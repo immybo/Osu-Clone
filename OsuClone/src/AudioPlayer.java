@@ -38,10 +38,26 @@ public class AudioPlayer {
 	public static void playLongAudio(String fname, int startTime, double volume, Game game){
 		// If no filename is given, don't do anything...
 		if(fname == null) return;
+		playLongAudio(fname, startTime, volume);
+		game.audioInitialised = true;
+	}
+	
+	/**
+	 * Plays an audio file until stopLongAudio(fname) is called.
+	 * Should only be used for long audio files.
+	 * This method is the one used when not ingame.
+	 * 
+	 * @param fname The filename to load the audio from.
+	 * @param startTime The time within the audio file to start at (ms).
+	 * @param volume The volume of the audio; 0.5 is a reasonable volume.
+	 */
+	public static void playLongAudio(String fname, int startTime, double volume){
+		if(fname == null) return;
 		
 		// If there is already a long audio currently playing, stop it
-		if(currentAudio != null)
+		if(currentAudio != null){
 			currentAudio.stop();
+		}
 		
 		// Build the media player and add it to the map
 		File file = new File(fname);
@@ -53,8 +69,6 @@ public class AudioPlayer {
 		audioPlayer.setVolume(0.1);
 		audioPlayer.setStartTime(new Duration(startTime));
 		audioPlayer.play();
-		
-		game.audioInitialised = true;
 	}
 	
 	/**
