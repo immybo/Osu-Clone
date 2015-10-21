@@ -41,7 +41,7 @@ public class Options {
 	public static char GAME_KEY_1;
 	public static char GAME_KEY_2;
 
-	public final static String MAP_FILE = "maps.txt";
+	public final static String MAP_FOLDER = "./maps";
 	public final static String PROGRAM_OPTION_FILE = "programOptions.txt";
 	public final static String USER_OPTION_FILE = "userOptions.txt";
 	public final static String DEFAULT_BG = "defaultbg.jpg";

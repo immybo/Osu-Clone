@@ -177,7 +177,7 @@ public class GameMenu {
 		// scroll pane defaults to having a border?
 		scrollPane.setBorder(new EmptyBorder(0,0,0,0));
 		
-		java.util.List<String> mapNames = getMaps(Options.MAP_FILE);
+		Set<String> mapNames = getMaps();
 		for(String name : mapNames){
 			GameMap currentMap = getMap(name);
 			JButton btn = addButton(name, Color.WHITE, Color.BLACK, mapButtonPanel);
@@ -390,11 +390,23 @@ public class GameMenu {
 	}
 
 	/**
-	 * Finds the list of available maps from a file
-	 * @param filename The file to read from. Throws an exception if it can't read from this file.
-	 * @return A List of maps found from the file. Gives an empty List if it couldn't read from the file.
+	 * Finds the list of available maps from the folder specified in options.
+	 * Maps' files should be contained within a folder; e.g. a path for a map could be "/maps/Scarlet Rose (Hard)", with
+	 * that folder containing "background.jpg", "audio.mp3" and "map".
+	 * @return A set of map names found in the folder. Gives an empty set if it couldn't read from the folder.
 	 */
-	private java.util.List<String> getMaps(String filename){
+	private Set<String> getMaps(){
+		// A set of map filesnames.
+		Set<String> mapNames = new HashSet<String>();
+		
+		File dir = new File(Options.MAP_FOLDER);
+		File[] fileList = dir.listFiles();
+		for(File f : fileList)
+			mapNames.add(f.getName());
+		
+		return mapNames;
+		
+		/* Old code to get the names from a file
 		// A list of map filenames
 		ArrayList<String> mapNames = new ArrayList<String>();
 		// Attempt to create a scanner to find map names and add them to the list of map names
@@ -402,8 +414,8 @@ public class GameMenu {
 			// Create a new scanner on the given file
 			Scanner s = new Scanner(new File(filename));
 			// Add to mapNames each name in the file
-			while(s.hasNext()){
-				mapNames.add(s.next());
+			while(s.hasNextLine()){
+				mapNames.add(s.nextLine());
 			}
 			s.close();
 		}
@@ -412,6 +424,7 @@ public class GameMenu {
 			System.err.println("Could not read from map names file ("+filename+"). Details: " + e);
 		}
 		return mapNames;
+		*/
 	}
 
 	/**
@@ -422,8 +435,8 @@ public class GameMenu {
 		// Scan through the file and attempt to make a map from it, then return it.
 		// Return null after an IOException
 		try{
-			Scanner s = new Scanner(new File("maps/" + filename));
-			GameMap newMap = new GameMap(s);
+			Scanner s = new Scanner(new File("maps/" + filename + "/map"));
+			GameMap newMap = new GameMap(filename, s);
 			return newMap;
 		}
 		catch(IOException e){

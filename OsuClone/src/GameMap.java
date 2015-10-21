@@ -67,15 +67,16 @@ public class GameMap {
 	/**
 	 * Constructor; creates a new instance of GameMap.
 	 * @param s A scanner on a map's save file.
+	 * @param name The name of this map.
 	 */
-	public GameMap(Scanner s){
+	public GameMap(String name, Scanner s){
 		// First, read the header elements
-		mapName = s.nextLine();
-		audio = s.next();
+		mapName = name;
+		audio = "maps/" + mapName + "/audio.mp3";
 		audioStartTime = s.nextInt();
 		
 		// Initialise the background
-		try{ backgroundImage = ImageIO.read(new File(s.next())); }
+		try{ backgroundImage = ImageIO.read(new File("maps/" + mapName + "/background.jpg")); }
 		// It's fine if there's no background image
 		catch(IOException e){ backgroundImage = null; }
 
