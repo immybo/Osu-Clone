@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
  * @author campberobe1
  */
 public class GameMap {
+	/* OLD VALUES
 	// There are 10 levels of the attributes, these map the 1-10 level to the actual value
 	// Overall difficulty is in ms, and gives an array for getting 100-50-miss
 	private static final int[][] OVERALL_DIFFICULTY_VALUES = {
@@ -37,6 +38,7 @@ public class GameMap {
 	private static final int[] CIRCLE_SIZE_VALUES = { 170, 155, 140, 125, 110, 95, 80, 65, 50, 35 };
 	// Health is as a ratio to 1; 1 is average
 	private static final double[] HEALTH_VALUES = { 4, 3, 2, 1, 0.8, 0.65, 0.5, 0.4, 0.3, 0.2 };
+	*/
 
 	// The name of the map
 	private String mapName;
@@ -53,13 +55,13 @@ public class GameMap {
 	private int audioStartTime;
 
 	// Overall difficulty governs the time accuracy required to hit elements (minimum to get 100, 50, miss)
-	private int[] overallDifficulty;
+	private int odValue;
 	// Approach rate governs how long elements appear on screen before they need to be clicked
-	private int approachRate;
+	private int arValue;
 	// Circle size is self-explanatory
-	private int circleSize;
+	private int csValue;
 	// Governs the rate at which health decays and how much the player is penalised for missing
-	private double health;
+	private int healthValue;
 	
 	// The background image that should be displayed for this map
 	private BufferedImage backgroundImage;
@@ -80,10 +82,10 @@ public class GameMap {
 		// It's fine if there's no background image
 		catch(IOException e){ backgroundImage = null; }
 
-		overallDifficulty = OVERALL_DIFFICULTY_VALUES[s.nextInt()];
-		approachRate = APPROACH_RATE_VALUES[s.nextInt()];
-		circleSize = CIRCLE_SIZE_VALUES[s.nextInt()];
-		health = HEALTH_VALUES[s.nextInt()];
+		odValue = s.nextInt();
+		arValue = s.nextInt();
+		csValue = s.nextInt();
+		healthValue = s.nextInt();
 
 		// Then, initialise the list
 		elementList = new ArrayList<Element>();
@@ -147,28 +149,52 @@ public class GameMap {
 	 * Returns the overall difficulty values for this map
 	 */
 	public int[] getOD(){
-		return overallDifficulty;
+		return getOD(odValue);
+	}
+	/**
+	 * Returns the overall difficulty values for this map, given that Hard Rock applies.
+	 */
+	public int[] getODHR(){
+		return getOD(odValue*Options.HRODMod);
 	}
 
 	/**
 	 * Returns the approach rate value for this map
 	 */
 	public int getAR(){
-		return approachRate;
+		return getAR(arValue);
+	}
+	/**
+	 * Returns the approach rate value for this map, given that Hard Rock applies.
+	 */
+	public int getARHR(){
+		return getAR(arValue*Options.HRARMod);
 	}
 
 	/**
 	 * Returns the circle size value for this map
 	 */
 	public int getCS(){
-		return circleSize;
+		return getCS(csValue);
+	}
+	/**
+	 * Returns the circle size value for this map, given that Hard Rock applies.
+	 */
+	public int getCSHR(){
+		return getCS(csValue*Options.HRCSMod);
 	}
 	
 	/**
 	 * Returns the health value for this map
 	 */
 	public double getHealth(){
-		return health;
+		return getHealth(healthValue);
+	}
+	/**
+	 * Returns the health value for this map, given that Hard Rock applies.
+	 */
+	public double getHealthHR(){
+		return getHealth(healthValue*Options.HRHealthMod);
 	}
 
 	/**
@@ -191,5 +217,31 @@ public class GameMap {
 	 */
 	public BufferedImage getBackground(){
 		return backgroundImage;
+	}
+	
+	/**
+	 * Returns the interpolated AR time in ms, for a given value.
+	 */
+	public int getAR(double ar){
+		return (int)(6000*Math.pow(1.28, -ar));
+	}
+	/**
+	 * Returns the interpolated CS in pixels, for a given value.
+	 */
+	public int getCS(double cs){
+		return (int)(200*Math.pow(1.13, -cs));
+	}
+	/**
+	 * Returns the interpolated OD values in ms, for a given value.
+	 */
+	public int[] getOD(double od){
+		double missTime = 1200*Math.pow(1.27, -od);
+		return new int[]{(int)missTime, (int)(missTime*0.75), (int)(missTime*0.5)}; 
+	}
+	/**
+	 * Returns the interpolated health values, for a given value.
+	 */
+	public double getHealth(double health){
+		return 5*Math.pow(1.4, -health);
 	}
 }

@@ -10,6 +10,7 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class Game {
 	private GameDraw mainPanel;
 	private GamePauseMenu pauseMenu;
 	private GameEndScreen endScreen;
+	private JFrame endFrame;
 
 	// The game timer
 	private Timer timer;
@@ -83,6 +85,7 @@ public class Game {
 	private int[] timeOffsets;
 	private int[] scores = { 300, 100, 50, 0 };
 	private int[] healthChange = { 10, 0, -7, -14 };
+	private double healthLoss;
 
 	// The current position of the mouse
 	private int mouseX = -1;
@@ -107,29 +110,48 @@ public class Game {
 	
 	// Whether or not the audio has initialised, since it has a short delay
 	public boolean audioInitialised = false;
+	
+	// Mods which are active for this game
+	private Map<String, Boolean> modsActive;
 
 	/**
 	 * Constructor; instantiates Game.
 	 * @param map The GameMap which this instance will play.
+	 * @param modsActive Which mods are active for this game.
 	 */
-	public Game(GameMap map){
+	public Game(GameMap map, Map<String, Boolean> modsActive){
 		// Set all the initial attributes from the map
 		
 		this.map = map;
 		map.resetQueue();
+		this.modsActive = modsActive;
 
 		currentMapTime = 0;
 
-		timeOffsets = map.getOD();
-		approachTime = map.getAR();
-		circleSize = map.getCS();
+
+		if(modsActive.get("hardrock")){
+			timeOffsets = map.getODHR();
+			approachTime = map.getARHR();
+			circleSize = map.getCSHR();
+			healthChange[3] /= map.getHealthHR();
+			healthChange[2] /= map.getHealthHR();
+			healthChange[1] /= map.getHealthHR();
+			healthChange[0] *= map.getHealthHR();
+			healthLoss = HEALTH_LOSS/map.getHealthHR();
+		}
+		else{
+			timeOffsets = map.getOD();
+			approachTime = map.getAR();
+			circleSize = map.getCS();
+			healthChange[3] /= map.getHealth();
+			healthChange[2] /= map.getHealth();
+			healthChange[1] /= map.getHealth();
+			// Negative ones (1,2,3) increase loss as health gets higher level (lower)
+			// Positive one (hit) decrease gain as health gets higher level
+			healthChange[0] *= map.getHealth();
+			healthLoss = HEALTH_LOSS/map.getHealth();
+		}
 		
-		healthChange[3] /= map.getHealth();
-		healthChange[2] /= map.getHealth();
-		healthChange[1] /= map.getHealth();
-		// Negative ones (1,2,3) increase loss as health gets higher level (lower)
-		// Positive one (hit) decrease gain as health gets higher level
-		healthChange[0] *= map.getHealth();
 
 		audioStartTime = map.getAudioStartTime();
 		
@@ -327,7 +349,7 @@ public class Game {
 	 */
 	public void restart(){
 		terminate();
-		new Game(map);
+		new Game(map, modsActive);
 	}
 
 	/**
@@ -543,7 +565,7 @@ public class Game {
 		setGuiAttributes();
 		
 		// Reduce the remaining health
-		health -= HEALTH_LOSS/map.getHealth();
+		health -= healthLoss;
 
 		// Render
 		mainPanel.repaint();
@@ -634,14 +656,27 @@ public class Game {
 		
 		// Switch the game panel out for the end of game panel
 		endScreen = new GameEndScreen();
-		endScreen.setPreferredSize(mainFrame.getSize());
+		endScreen.setPreferredSize(new Dimension(Options.END_SCREEN_WIDTH, Options.END_SCREEN_HEIGHT));
 		endScreen.init(score, accuracy, scoreCounts, map, this);
 		endScreen.setVisible(true);
 		
-		mainFrame.remove(mainPanel);
-		mainFrame.add(endScreen, BorderLayout.CENTER);
+		// Get rid of this frame and make a new, non-fullscreen one
+		mainFrame.dispose();
 		
-		mainFrame.revalidate();
-		mainFrame.repaint();
+		endFrame = new JFrame();
+		endFrame.setSize(Options.END_SCREEN_WIDTH, Options.END_SCREEN_HEIGHT);
+		endFrame.setLocation(Options.END_WINDOW_INITIAL_X, Options.END_WINDOW_INITIAL_Y);
+		endFrame.setResizable(Options.END_WINDOW_RESIZABLE);
+		endFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		endFrame.setTitle("MyOsu! Map End Screen");
+		endFrame.add(endScreen);
+		endFrame.setVisible(true);
+	}
+	
+	/**
+	 * Disposes of the end screen frame.
+	 */
+	public void terminateEndScreen(){
+		endFrame.dispose();
 	}
 }

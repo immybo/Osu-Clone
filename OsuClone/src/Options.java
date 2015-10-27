@@ -34,9 +34,22 @@ public class Options {
 	public static int GAME_WINDOW_INITIAL_X;
 	public static int GAME_WINDOW_INITIAL_Y;
 	public static boolean GAME_WINDOW_RESIZABLE;
+	
+	public static int END_SCREEN_WIDTH = 900;
+	public static int END_SCREEN_HEIGHT = 600;
+	public static int END_WINDOW_INITIAL_X = 200;
+	public static int END_WINDOW_INITIAL_Y = 200;
+	public static boolean END_WINDOW_RESIZABLE = false;
 
 	public static int GAME_TICK_TIME = 20;
 	public static int GAME_CIRCLE_SIZE = 100;
+	
+	// Multipliers for the 3 attributes when Hard Rock is active.
+	// Note that this actually multiplies the typically 1-10 value, not the proper value.
+	public static double HRODMod = 1.5;
+	public static double HRARMod = 1.5;
+	public static double HRCSMod = 1.5;
+	public static double HRHealthMod = 1;
 
 	public static char GAME_KEY_1;
 	public static char GAME_KEY_2;
@@ -85,6 +98,7 @@ public class Options {
 	public final static String SKIN_RANKING_BACK_BUTTON = "skin/ranking-back.png";
 	public final static String SKIN_TEXT_ACCURACY = "skin/ranking-accuracy.png";
 	public final static String SKIN_TEXT_RANKING = "skin/ranking-title.png";
+	public final static String SKIN_RANKING_PANEL = "skin/ranking-panel.png";
 	
 	// Skin sounds
 	public final static String SKIN_COMBO_BREAK_SOUND = "skin/combobreak.mp3";

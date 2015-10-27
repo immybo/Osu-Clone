@@ -16,13 +16,18 @@ import java.awt.event.*;
 public class GameMenu {
 	/** MODS ACTIVE **/
 	private Map<String, Boolean> mods;
+	private boolean modWindowOpen = false;
 
 	/** JCOMPONENTS **/
 	private JFrame menuOuterFrame;
 	private JPanel backgroundPanel;
 	private JPanel mainPanel;
 	private JPanel mapPanel;
+	private JPanel modPanel;
 	private JLabel titleLabel;
+	
+	private JCheckBox hiddenCheckbox;
+	private JCheckBox hardRockCheckbox;
 
 	private OptionMenu optionFrame;
 
@@ -101,6 +106,9 @@ public class GameMenu {
 
 		// Select a random map to start
 		selectRandom();
+		
+		// Initialise the mods panel at the bottom (not displayed unless the mods button is clicked)
+		initModPanel();
 
 		menuOuterFrame.setVisible(true);
 	}
@@ -118,6 +126,37 @@ public class GameMenu {
 				return;
 			}
 		fontExists = false;
+	}
+	
+	/**
+	 * Initialises the mod panel of the menu frame
+	 */
+	private void initModPanel(){
+		modPanel = new JPanel(new GridLayout(0, 2, 0, 0) );
+		modPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		modPanel.setBackground(Color.WHITE);
+		
+		hiddenCheckbox = addMod(modPanel, "Hidden");
+		hardRockCheckbox = addMod(modPanel, "Hard Rock");
+	}
+	
+	/**
+	 * Used for initModPanel; adds a mod label and checkbox
+	 * to the specified component with the specified label,
+	 * and returns the checkbox.
+	 */
+	private JCheckBox addMod(JComponent component, String name){
+		JLabel label = new JLabel(name);
+		label.setHorizontalAlignment(SwingConstants.RIGHT);
+		
+		JCheckBox checkbox = new JCheckBox();
+		checkbox.setOpaque(false);
+		checkbox.setHorizontalAlignment(SwingConstants.LEFT);
+		
+		component.add(label);
+		component.add(checkbox);
+		
+		return checkbox;
 	}
 	
 	/**
@@ -211,21 +250,24 @@ public class GameMenu {
 	 */
 	private void initMainPanel(){
 		mainPanel = new JPanel();
-		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
+		mainPanel.setLayout(new BorderLayout());
 		mainPanel.setOpaque(false);
 		
-		// Create the various buttons
-		optionButton = addButton("Options", Color.WHITE, Color.BLACK, mainPanel);
-		modButton = addButton("Mods", Color.WHITE, Color.BLACK, mainPanel);
-		exitButton = addButton("Exit", Color.WHITE, Color.BLACK, mainPanel);
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+		buttonPanel.setOpaque(false);
 		
-		mainPanel.setPreferredSize(new Dimension(menuOuterFrame.getWidth(), (int)optionButton.getPreferredSize().getHeight()));
+		// Create the various buttons
+		optionButton = addButton("Options", Color.WHITE, Color.BLACK, buttonPanel);
+		modButton = addButton("Mods", Color.WHITE, Color.BLACK, buttonPanel);
+		exitButton = addButton("Exit", Color.WHITE, Color.BLACK, buttonPanel);
 		
 		// set the buttons to each take a third of the width (but maintain the default height)
-		optionButton.setPreferredSize(new Dimension((int)mainPanel.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
-		modButton.setPreferredSize(new Dimension((int)mainPanel.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
-		exitButton.setPreferredSize(new Dimension((int)mainPanel.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
+		optionButton.setPreferredSize(new Dimension((int)menuOuterFrame.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
+		modButton.setPreferredSize(new Dimension((int)menuOuterFrame.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
+		exitButton.setPreferredSize(new Dimension((int)menuOuterFrame.getPreferredSize().getWidth()/3, (int)optionButton.getPreferredSize().getHeight()));
 		
+		mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 		menuOuterFrame.add(mainPanel, BorderLayout.SOUTH);
 	}
 
@@ -327,7 +369,6 @@ public class GameMenu {
 
 	}
 
-
 	/**
 	 * Handles button actions for the menu
 	 */
@@ -339,6 +380,9 @@ public class GameMenu {
 		}
 		else if(source.equals(exitButton)){
 			System.exit(0);
+		}
+		else if(source.equals(modButton)){
+			toggleModWindow();
 		}
 
 		// If one of the map buttons is pressed,
@@ -353,7 +397,7 @@ public class GameMenu {
 	}
 	
 	/**
-	 * Selects the given button, changing the background and the button colors
+	 * Selects the given map button, changing the background and the button colors
 	 */
 	private void selectButton(JButton button){
 		// Change the colours of the previous button back (if there is one)
@@ -377,8 +421,13 @@ public class GameMenu {
 	 * GameMap
 	 */
 	private void buildGame(GameMap map){
+		// Evaluate mods active
+		Map<String, Boolean> modsActive = new HashMap<String, Boolean>();
+		modsActive.put("hidden", hiddenCheckbox.isSelected());
+		modsActive.put("hardrock", hardRockCheckbox.isSelected());
+		
 		if(currentGame != null) currentGame.terminate();
-		currentGame = new Game(map);
+		currentGame = new Game(map, modsActive);
 	}
 
 	/**
@@ -445,5 +494,18 @@ public class GameMenu {
 		return null;
 	}
 
-
+	/**
+	 * Toggles whether or not the mod area is open.
+	 */
+	private void toggleModWindow(){
+		if(modWindowOpen){
+			mainPanel.remove(modPanel);
+			menuOuterFrame.revalidate();
+		}
+		else{
+			mainPanel.add(modPanel,BorderLayout.NORTH);
+			menuOuterFrame.revalidate();
+		}
+		modWindowOpen = !modWindowOpen;
+	}
 }

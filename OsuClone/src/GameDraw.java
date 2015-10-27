@@ -180,7 +180,7 @@ public class GameDraw extends JPanel{
 		currentX -= percentImage.getWidth()/2 + 5;
 		for(int i = strAcc.length()-1; i >= 0; i--){
 			BufferedImage img;
-			// If it's a dot, obviously we can't parse it as an int
+			// If it's a dot, obviously we can't parse it as an int..
 			if(strAcc.charAt(i) == '.') img = dotImage;
 			else img = numberImage[Integer.parseInt(((Character)(strAcc.charAt(i))).toString())];
 			

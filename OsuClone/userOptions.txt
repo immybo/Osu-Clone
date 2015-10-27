@@ -9,12 +9,15 @@ TEST_OPTION;There aren't many options;true;
 
 
 
+
 TEST_OPTION3;the option menu....;true;
 
 
 
 
+
 TEST_OPTION2;but I want to show off;true;
+
 
 
 
@@ -30,13 +33,6 @@ TEST_OPTION_STRING9;A string option;They're different from boolean;
 
 
 
-TEST_OPTION_STRINGb;Which I think;daasdasdasd;
-
-
-
-
-
-
 
 GAME_KEY_2;Key 2;x;
 
@@ -46,4 +42,14 @@ GAME_KEY_2;Key 2;x;
 
 
 
+
 GAME_KEY_1;Key 1;z;
+
+
+
+
+
+
+
+
+TEST_OPTION_STRINGb;Which I think;daasdasdasd;

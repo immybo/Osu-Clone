@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.imageio.ImageIO;
 
@@ -82,20 +83,9 @@ public class GameEndScreen extends JPanel {
 		};
 		addMouseListener(l);
 		
-		scoreXOffset = getPreferredSize().width/2;
-		scoreYOffset = getPreferredSize().height/2 - 75;
-		accXOffset = getPreferredSize().width/2;
-		accYOffset = getPreferredSize().height/2 + 75;
-		
-		rankXOffset = getPreferredSize().width/2 + 30;
-		rankYOffset = getPreferredSize().height/2 - 75;
-		
-		menuXOffset = accXOffset - 200;
-		menuYOffset = scoreYOffset - 200;
-		
-		backgroundImage = map.getBackground();
-		
 		try{
+			backgroundImage = ImageIO.read(new File(Options.SKIN_RANKING_PANEL));
+			
 			menuButtonBackground = ImageIO.read(new File(Options.SKIN_RANKING_BACK_BUTTON));
 			numberImage = new BufferedImage[10];
 			for(int i = 0; i < 10; i++){
@@ -139,7 +129,17 @@ public class GameEndScreen extends JPanel {
 			System.out.println("Couldn't read from image file while initialising end screen. " + e);
 		}
 		
-		setVisible(true);
+		scoreXOffset = getPreferredSize().width*3/8;
+		scoreYOffset = getPreferredSize().height/2 - 75;
+		accXOffset = getPreferredSize().width*3/8;
+		accYOffset = getPreferredSize().height/2 + 75;
+		
+		rankXOffset = getPreferredSize().width*11/16;
+		rankYOffset = getPreferredSize().height/2 - 75;
+		
+		// directly in the center, at the top
+		menuXOffset = getPreferredSize().width/2 - menuButtonBackground.getWidth()/2;
+		menuYOffset = 0;
 	}
 	
 	@Override
@@ -150,7 +150,7 @@ public class GameEndScreen extends JPanel {
 			g2d.fillRect(0, 0, getWidth(), getHeight());
 		}
 		else
-			g2d.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
+			g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
 		
 		// Draw the score
 		// We do this similarly to in GameDraw, where it is an annoying method
@@ -181,7 +181,11 @@ public class GameEndScreen extends JPanel {
 			currentX -= img.getWidth() + 5;
 		}
 		
-		g2d.drawImage(accuracyText, currentX - 150, accYOffset, currentX - 15, accYOffset + numberImage[0].getHeight(), 0, 0, accuracyText.getWidth(), accuracyText.getHeight(), this);
+		// height is snapped to the height of the numbers
+		double accuracyTextScaleFactor = (double)numberImage[0].getHeight()/accuracyText.getHeight();
+		int accuracyTextXOffset = (int)(accuracyTextScaleFactor*accuracyText.getWidth()) + 30;
+		int accuracyTextHeight = (int)(accuracyTextScaleFactor*accuracyText.getHeight());
+		g2d.drawImage(accuracyText, currentX - accuracyTextXOffset, accYOffset, currentX - 30, accYOffset + accuracyTextHeight, 0, 0, accuracyText.getWidth(), accuracyText.getHeight(), this);
 		
 		// Draw the ranking
 		g2d.drawImage(rankingImage, rankXOffset, rankYOffset, rankXOffset+250, rankYOffset+250*(rankingImage.getHeight()/rankingImage.getWidth()), 0, 0, rankingImage.getWidth(), rankingImage.getHeight(), this);
@@ -193,11 +197,11 @@ public class GameEndScreen extends JPanel {
 	 * Responds to a mouse event, checking whether it was pressed on the back button or not.
 	 */
 	private void doMouse(MouseEvent e){
-		// Is there a better way of doing this? Not sure. Feels clunky.
+		//Is there a better way of doing this? Not sure. Feels clunky.
 		if(e.getX() > menuXOffset &&
 		   e.getX() < menuXOffset + menuButtonBackground.getWidth() &&
 		   e.getY() > menuYOffset &&
 		   e.getY() < menuYOffset + menuButtonBackground.getHeight())
-			game.terminate();
+			game.terminateEndScreen();
 	}
 }
