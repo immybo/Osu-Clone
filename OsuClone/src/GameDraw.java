@@ -110,6 +110,7 @@ public class GameDraw extends JPanel{
 
 	@Override
 	public void paintComponent(Graphics g){
+		// TODO change elements to be at a % of screen width/height, and to have a % size, so that windowed mode / differing resolutions are possible
 		Graphics2D g2d = (Graphics2D)g;
 		// Clear current graphics
 		g2d.setColor(Color.BLACK);

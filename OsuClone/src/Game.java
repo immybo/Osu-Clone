@@ -27,7 +27,7 @@ public class Game {
 	// The base loss of health per tick; modified by the map's health
 	private static final double HEALTH_LOSS = 0.1;
 	
-	// Volumes for sound clips; in relative dB
+	// Volumes for sound clips; in relative dB (I think)
 	private static final float HIT_SOUND_VOLUME = -20f;
 	private static final float COMBO_BREAK_VOLUME = 0.7f;
 	
@@ -65,7 +65,7 @@ public class Game {
 
 	// The score and current health of the player
 	private int score = 0;
-	private double health = 100;
+	private double health = 0;
 	
 	// The current combo
 	private int combo = 0;
@@ -113,6 +113,14 @@ public class Game {
 	
 	// Mods which are active for this game
 	private Map<String, Boolean> modsActive;
+	
+	// Whether or not a 'break' in the map is active, wherein no health will be lost
+	private boolean breakActive = false;
+	// Only used when breakActive
+	private int breakEndTime = -1;
+	
+	// When the break, before play starts, ends
+	private int initialBreakEnd;
 
 	/**
 	 * Constructor; instantiates Game.
@@ -127,7 +135,7 @@ public class Game {
 		this.modsActive = modsActive;
 
 		currentMapTime = 0;
-
+		initialBreakEnd = map.getInitialBreakEnd();
 
 		if(modsActive.get("hardrock")){
 			timeOffsets = map.getODHR();
@@ -553,22 +561,48 @@ public class Game {
 
 		// Update the active slider
 		if(mouseDown) changeActiveSliderPoints();
+		
+		// Split into 2 parts: Initial break (before play starts) and play time
+		if(currentMapTime < initialBreakEnd)
+			processInitialBreak();
+		else{
+			// Check if any elements should be removed
+			checkDisposal();
+			// Check if the next circle in the map should be shown
+			evaluateNext();
+			// Draw all circles left in the queue
+			drawQueue();
 
-		// Check if any elements should be removed
-		checkDisposal();
-		// Check if the next circle in the map should be shown
-		evaluateNext();
-		// Draw all circles left in the queue
-		drawQueue();
+		
+			// Reduce the remaining health
+			reduceHealth();
 
+			// Check if we're in a break, and then check if we should be out of it if so
+			if(breakActive)
+				if(breakEndTime < currentMapTime)
+					breakActive = false;
+		}
+		
 		// Update the gui attributes
 		setGuiAttributes();
-		
-		// Reduce the remaining health
-		health -= healthLoss;
 
 		// Render
 		mainPanel.repaint();
+	}
+	
+	/**
+	 * If we're in the initial break, increases the health by the appropriate amount
+	 */
+	private void processInitialBreak(){
+		health += 100*(double)Options.GAME_TICK_TIME/initialBreakEnd;
+	}
+	
+	/**
+	 * Reduces the remaining health by the appropriate amount
+	 * IFF there isn't currently a break.
+	 */
+	private void reduceHealth(){
+		if(!breakActive) health -= healthLoss;
 	}
 
 	/**
@@ -604,12 +638,20 @@ public class Game {
 
 		int nextTime = map.peek().getTime();
 		if(nextTime == -1) return;
-
+		
 		// If it's within the time range where it should appear
-		if(nextTime - currentMapTime < approachTime){
-			// Then add the element to the queue of elements to display (and remove it from the map)
-			elements.add(map.poll());
+
+		// If it's a break, we want to process it as such (without the approach time)
+		if(map.peek().getElementType() == 3){
+			if(nextTime < currentMapTime){
+				breakActive = true;
+				breakEndTime = ((Break)map.peek()).getEndTime();
+				map.poll();
+			}
 		}
+		// Otherwise add the element to the queue of elements to display (and remove it from the map)
+		else if(nextTime - currentMapTime < approachTime)
+			elements.add(map.poll());
 	}
 
 	/**

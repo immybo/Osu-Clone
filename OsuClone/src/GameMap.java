@@ -65,6 +65,9 @@ public class GameMap {
 	
 	// The background image that should be displayed for this map
 	private BufferedImage backgroundImage;
+	
+	// When the initial break for the map ends
+	private int initialBreakEndTime;
 
 	/**
 	 * Constructor; creates a new instance of GameMap.
@@ -86,8 +89,9 @@ public class GameMap {
 		arValue = s.nextInt();
 		csValue = s.nextInt();
 		healthValue = s.nextInt();
+		initialBreakEndTime = s.nextInt();
 
-		// Then, initialise the list
+		// Then, initialise the data structures
 		elementList = new ArrayList<Element>();
 
 		// And scroll through the scanner, finding all the values
@@ -102,6 +106,11 @@ public class GameMap {
 			if(elementType == 2){
 				// A slider has 6 parameters: start time, end time, length, angle, and x and y position (all integers)
 				elementList.add(new Slider(s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt(), s.nextInt()));
+			}
+			// Add a break
+			if(elementType == 3){
+				// A break has 2 parameters: start time and end time
+				elementList.add(new Break(s.nextInt(), s.nextInt()));
 			}
 		}
 
@@ -243,5 +252,12 @@ public class GameMap {
 	 */
 	public double getHealth(double health){
 		return 5*Math.pow(1.4, -health);
+	}
+	
+	/**
+	 * Returns the map time when the initial break end
+	 */
+	public int getInitialBreakEnd(){
+		return initialBreakEndTime;
 	}
 }
