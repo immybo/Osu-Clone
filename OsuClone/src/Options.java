@@ -70,6 +70,8 @@ public class Options {
 	public final static String SKIN_APPROACH_CIRCLE = "skin/approachcircle.png";
 	public final static String SKIN_HIT_CIRCLE_BORDER = "skin/hitcircle.png";
 	
+	public final static String SKIN_SKIP_BUTTON_IMAGE = "skin/play-skip.png";
+	
 	public final static String SKIN_PAUSE_MENU_BACKGROUND = "skin/pausebackground.png";
 	
 	public final static String SKIN_NUMBER_BASE = "skin/score-";

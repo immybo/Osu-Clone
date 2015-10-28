@@ -39,6 +39,8 @@ public class GameDraw extends JPanel{
 	// The queue of elements that should be disposed of because they have timed out
 	private Queue<Element> disposalElements = new LinkedList<Element>();
 	
+	private boolean skipButtonActive = true;
+	
 	// Images for the various elements that need to be drawn
 	private BufferedImage approachCircleImage;
 	private BufferedImage circleImage;
@@ -53,6 +55,8 @@ public class GameDraw extends JPanel{
 	private BufferedImage healthBarImage3;
 	private BufferedImage healthBarImage2;
 	private BufferedImage healthBarImage1;
+	
+	private BufferedImage skipButtonImage;
 
 	// The colors to draw the circles in
 	private Color borderColor = Color.BLACK;
@@ -62,6 +66,11 @@ public class GameDraw extends JPanel{
 	private Color sliderEndColor = Color.CYAN;
     private Color followCircleColor = Color.GRAY; 
 	private Color sliderLineColor = Color.WHITE;
+	
+	private int skipButtonX;
+	private int skipButtonX2;
+	private int skipButtonY;
+	private int skipButtonY2;
 
 	private long previousTime;
 
@@ -101,6 +110,8 @@ public class GameDraw extends JPanel{
 			for(int i = 0; i < 10; i++){
 				numberImage[i] = ImageIO.read(new File(Options.SKIN_NUMBER_BASE + i + Options.SKIN_NUMBER_END));
 			}
+			
+			skipButtonImage = ImageIO.read(new File(Options.SKIN_SKIP_BUTTON_IMAGE));
 			
 		}
 		catch(IOException e){
@@ -187,6 +198,15 @@ public class GameDraw extends JPanel{
 			
 			g2d.drawImage(img, currentX-img.getWidth()/2, accYOffset, currentX, accYOffset+img.getHeight()/2, 0, 0, img.getWidth(), img.getHeight(), this);
 			currentX -= img.getWidth()/2 + 5;
+		}
+		
+		// If the skip button is active, draw it
+		if(skipButtonActive){
+			skipButtonX = getWidth()-skipButtonImage.getWidth()-50;
+			skipButtonX2 = getWidth()-50;
+			skipButtonY = getHeight()-skipButtonImage.getHeight()-50;
+			skipButtonY2 = getHeight()-50;
+			g2d.drawImage(skipButtonImage, skipButtonX, skipButtonY, skipButtonX2, skipButtonY2, 0, 0, skipButtonImage.getWidth(), skipButtonImage.getHeight(), this);
 		}
 	}
 
@@ -322,6 +342,14 @@ public class GameDraw extends JPanel{
 			g2d.drawOval((int)approachX, (int)approachY, (int)approachCircleSize, (int)approachCircleSize);
 		}
 	}
+	
+	/**
+	 * Returns the array of:
+	 * {skipButtonX, skipButtonX2, skipButtonY, skipButtonY2}
+	 */
+	public int[] getSkipButtonPosition(){
+		return new int[]{skipButtonX, skipButtonX2, skipButtonY, skipButtonY2};
+	}
 
 	/**
 	 * Adds an element to the queue of elements to be repeatedly drawn.
@@ -410,5 +438,9 @@ public class GameDraw extends JPanel{
 			returnQueue.add(disposalElements.poll());
 		}
 		return returnQueue;
+	}
+	
+	public void removeSkipButton(){
+		skipButtonActive = false;
 	}
 }

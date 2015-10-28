@@ -108,6 +108,9 @@ public class Game {
 	// The start time of the current pause; only reliable when the game is paused
 	private long pauseStartTime;
 	
+	// The amount of time skipped from the initial pause
+	private int skippedTime = 0;
+	
 	// Whether or not the audio has initialised, since it has a short delay
 	public boolean audioInitialised = false;
 	
@@ -373,6 +376,17 @@ public class Game {
 			mouseDown = true;
 			// Check current elements to see which one it's on (if any)
 			elementCheck(mouseX, mouseY);
+			
+			// Check to see if it's over the skip button if applicable
+			if(currentMapTime < initialBreakEnd){
+				int[] buttonPosition = mainPanel.getSkipButtonPosition();
+				if(mouseX > buttonPosition[0] && mouseX < buttonPosition[1]
+				 &&mouseY > buttonPosition[2] && mouseY < buttonPosition[3]){
+					mainPanel.removeSkipButton();
+					skipIntro();
+					health = 100;
+				}
+			}
 		}
 
 		// Otherwise, if it was released, check if it was on a slider
@@ -557,7 +571,7 @@ public class Game {
 	 */
 	private void doGame(){
 		// Evaluate the new time
-		currentMapTime = (int)(System.currentTimeMillis()-pauseDelay-mapStartTime);
+		currentMapTime = (int)(System.currentTimeMillis()-pauseDelay-mapStartTime+skippedTime);
 
 		// Update the active slider
 		if(mouseDown) changeActiveSliderPoints();
@@ -595,6 +609,17 @@ public class Game {
 	 */
 	private void processInitialBreak(){
 		health += 100*(double)Options.GAME_TICK_TIME/initialBreakEnd;
+		// If it's the last tick of the initial break, remove the skip button
+		if(currentMapTime + Options.GAME_TICK_TIME > initialBreakEnd){
+			mainPanel.removeSkipButton();
+		}
+	}
+	
+	/**
+	 * Skips past the initial break to the start of gameplay (almost)
+	 */
+	private void skipIntro(){
+		skippedTime = initialBreakEnd - 1000 - currentMapTime;
 	}
 	
 	/**
